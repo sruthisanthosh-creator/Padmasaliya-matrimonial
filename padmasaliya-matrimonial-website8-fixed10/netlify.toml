@@ -1,0 +1,41 @@
+# Netlify deploy config for the Padmasaliya Matrimonial static site.
+# Drag this folder onto https://app.netlify.com/drop  — or connect a Git repo.
+
+[build]
+  publish = "."
+  command = ""
+
+# Serve index.html (the language chooser) at the root.
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Nice-to-have: send unknown paths to a friendly 404 page.
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
