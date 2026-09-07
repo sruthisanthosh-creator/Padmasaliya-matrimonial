@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padmasaliya Matrimonial — Parents Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@500;600;700&family=Noto+Sans+Telugu:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/v2.css">
+<link rel="icon" type="image/png" href="assets/img/logo-icon.png">
+<link rel="apple-touch-icon" href="assets/img/logo-icon.png">
+<meta name="description" content="Padmasaliya Matrimonial — an exclusive, verified matchmaking platform for the Padmasaliya community. Create profiles, search trusted matches and connect on shared values.">
+<meta name="theme-color" content="#7a1a2b">
+<meta property="og:title" content="Padmasaliya Matrimonial">
+<meta property="og:description" content="Rooted in Tradition, United by Values. Verified matrimonial profiles for the Padmasaliya community.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/img/logo-icon.png">
+<meta name="twitter:card" content="summary">
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+(async function(){
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data?.session) {
+    window.location.href = 'login.html';
+  }
+})();
+</script>
+<svg style="display:none">
+<defs>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 8.4-7 9-4-.6-7-4.4-7-9V6l7-3z"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 8.4-7 9-4-.6-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.6.4 4.5 2.5 4.5 5.3"/></symbol>
+<symbol id="i-family" viewBox="0 0 24 24"><circle cx="8" cy="7" r="2.6"/><circle cx="16" cy="7" r="2.6"/><path d="M3 20c0-3 2.2-5.4 5-5.4s5 2.4 5 5.4M11 20c0-3 2.2-5.4 5-5.4s5 2.4 5 5.4"/></symbol>
+<symbol id="i-couple" viewBox="0 0 24 24"><circle cx="9" cy="7" r="2.6"/><circle cx="16" cy="9" r="2.2"/><path d="M4 20c0-3 2.2-5.4 5-5.4s5 2.4 5 5.4M14 20c0-2.4 1.8-4.4 4-4.4s4 2 4 4.4"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16M7 12h10M10 19h4"/></symbol>
+<symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.4 4.5 6 4c2-.3 3.8.7 6 3 2.2-2.3 4-3.3 6-3 3.6.5 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></symbol>
+<symbol id="i-heart-fill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.4 4.5 6 4c2-.3 3.8.7 6 3 2.2-2.3 4-3.3 6-3 3.6.5 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></symbol>
+<symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 3h16l-2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.9 7.9 0 0 0 0-3l2-1.6-2-3.4-2.4.7a8 8 0 0 0-2.6-1.5L14 2h-4l-.4 2.7a8 8 0 0 0-2.6 1.5l-2.4-.7-2 3.4L4.6 10.5a7.9 7.9 0 0 0 0 3l-2 1.6 2 3.4 2.4-.7a8 8 0 0 0 2.6 1.5L10 22h4l.4-2.7a8 8 0 0 0 2.6-1.5l2.4.7 2-3.4-2-1.6z"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+<symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="2" y="13" width="5" height="7" rx="2"/><rect x="17" y="13" width="5" height="7" rx="2"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8z"/><path d="M13 6v12" stroke-dasharray="2 3"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.2 1-1.2 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-diya" viewBox="0 0 60 60"><path d="M6 41c0 4 24 6 24 6s24-2 24-6c0-3.2-8-5.2-24-5.2S6 37.8 6 41z" fill="#c9973f"/><path d="M14 41c2 2 12 3 16 3s14-1 16-3" fill="none" stroke="#8a611f" stroke-width="1"/><ellipse cx="30" cy="30" rx="3" ry="4" fill="#7a1a2b"/><path d="M30 27c-3.5-5-1.5-9 0-12.5 1.5 3.5 3.5 7.5 0 12.5z" fill="#f4b23e" stroke="none"/><path d="M30 25c-1.8-2.6-.8-4.6 0-6.4 .8 1.8 1.8 3.8 0 6.4z" fill="#fff3d1" stroke="none"/></symbol>
+</defs>
+</svg>
+
+
+
+<section id="screen3" class="screen active">
+
+  <div class="s3-topbar">
+    <a href="home.html" class="brand-mark" style="text-decoration:none;color:inherit;">
+      <img src="assets/img/logo-icon.png" alt="Padmasaliya Matrimonial" width="42" height="34" style="object-fit:contain;">
+      <div class="brand-name"><b data-i18n="brand.name" style="font-size:15px;">PADMASALIYA MATRIMONIAL</b><div class="brand-tagline" data-i18n="brand.tagline">Rooted in Tradition, United by Values</div></div>
+    </a>
+    <div class="s3-pill active"><svg class="icon icon-lg"><use href="#i-user"></use></svg> <span class="label" data-i18n="s3.parentsPortal">Parents Portal</span></div>
+    <div class="s3-pill"><svg class="icon"><use href="#i-couple"></use></svg> <span class="label" data-i18n="s3.bgApp">Bride/Groom App</span><span class="soon" data-i18n="s2.comingSoon2">SOON</span></div>
+    <div class="s3-topbar-right">
+      <span data-i18n="s3.help" style="display:flex;align-items:center;gap:6px;"><svg class="icon"><use href="#i-help"></use></svg>Help</span>
+      <div class="s3-bell" id="bellBtn" style="cursor:pointer;position:relative;"><svg class="icon"><use href="#i-bell"></use></svg><span class="dot" id="bellDot" hidden>0</span>
+        <div class="notif-pop" id="notifPop" hidden>
+          <div class="notif-pop-head"><b data-i18n="s3.notifications">Notifications</b><button type="button" id="notifReadAll" data-i18n="s3.markRead">Mark all read</button></div>
+          <div id="notifList"></div>
+        </div>
+      </div>
+      <div class="s3-user">
+        <div class="s3-avatar">RP</div>
+        <div><b>Raghav Padmasali</b><span data-i18n="s3.parentAccount">Parent Account</span></div>
+      </div>
+      <div class="lang-dd" data-langdd>
+        <button class="lang-dd-btn" data-dd-toggle><svg class="icon"><use href="#i-globe"></use></svg> <span data-i18n-lang-label>English</span> <svg class="icon icon-sm"><use href="#i-chevron-down"></use></svg></button>
+        <div class="lang-dd-menu">
+          <button data-lang="en" class="sel"><span class="dd-flag">EN</span> English</button>
+          <button data-lang="ta"><span class="dd-flag">அ</span> தமிழ் (Tamil)</button>
+          <button data-lang="te"><span class="dd-flag">తె</span> తెలుగు (Telugu)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="s3-body">
+    <aside class="s3-sidebar">
+      <div class="s3-side-user">
+        <div class="s3-avatar">RP</div>
+        <div>
+          <b>Raghav Padmasali</b>
+          <span data-i18n="s3.parentAccount">Parent Account</span>
+          <div class="verified-chip"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span> <span data-i18n="s3.idVerified">ID Verified</span></div>
+        </div>
+      </div>
+      <div class="s3-nav-item active" data-view="search"><svg class="icon"><use href="#i-home"></use></svg> <span data-i18n="s3.nav.dashboard">Dashboard</span></div>
+      <div class="s3-nav-item" onclick="location.href='create-profile.html'" style="cursor:pointer;"><svg class="icon"><use href="#i-plus"></use></svg> <span data-i18n="s3.nav.create">Create Profile</span></div>
+      <div class="s3-nav-item" data-view="search"><svg class="icon"><use href="#i-search"></use></svg> <span data-i18n="s3.nav.search">Search Profiles</span></div>
+      <div class="s3-nav-item" data-view="drafts"><svg class="icon"><use href="#i-bookmark"></use></svg> <span data-i18n="s3.nav.drafts">Drafts (Saved)</span><span class="count" id="cntDrafts" hidden>0</span></div>
+      <div class="s3-nav-item" data-view="recommended"><svg class="icon"><use href="#i-send"></use></svg> <span data-i18n="s3.nav.recommended">Recommended</span><span class="count" id="cntRecommended" hidden>0</span></div>
+      <div class="s3-nav-item" data-view="received"><svg class="icon"><use href="#i-heart"></use></svg> <span data-i18n="s3.nav.received">Received Interests</span><span class="count" id="cntReceived" hidden>0</span></div>
+      <div class="s3-nav-item" data-view="sent"><svg class="icon"><use href="#i-send"></use></svg> <span data-i18n="s3.nav.sent">Sent Interests</span><span class="count" id="cntSent" hidden>0</span></div>
+      <div class="s3-nav-item" data-view="myprofile"><svg class="icon icon-lg"><use href="#i-user"></use></svg> <span data-i18n="s3.nav.myProfiles">My Profile</span></div>
+      <div class="s3-nav-item" data-view="subscription"><svg class="icon"><use href="#i-crown"></use></svg> <span data-i18n="s3.nav.subscription">Subscription</span></div>
+      <div class="s3-nav-item" onclick="location.href='help.html'" style="cursor:pointer;"><svg class="icon"><use href="#i-headset"></use></svg> <span data-i18n="s3.nav.support">Help &amp; Support</span></div>
+      <div class="s3-nav-item" data-view="settings"><svg class="icon"><use href="#i-gear"></use></svg> <span data-i18n="s3.nav.settings">Settings</span></div>
+      <div class="s3-nav-item" style="cursor:pointer;" onclick="supabaseClient.auth.signOut().then(()=>window.location.href='home.html');"><svg class="icon"><use href="#i-logout"></use></svg> <span data-i18n="s3.nav.logout">Logout</span></div>
+      <div class="s3-trust-box">
+        <span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span>
+        <div><b data-i18n="s3.trustBoxT">100% Trusted Community</b><span data-i18n="s3.trustBoxS">Verified Profiles • Secure • Private</span></div>
+      </div>
+    </aside>
+
+    <main class="s3-main">
+      <h1 class="fade-up-in" id="viewTitle" data-i18n="s3.mainTitle">Find the Right Alliance</h1>
+      <p class="sub fade-up-in d1" id="viewSub" data-i18n="s3.mainSub">Search &amp; Connect with Verified Padmasaliya Profiles</p>
+
+      <!-- Complete-profile gate. Shown instead of results until the parent's
+           own profile is complete and published. The database enforces the
+           same rule, so hiding this banner does not unlock anything. -->
+      <div class="gate-card" id="gateBanner" hidden>
+        <span class="gate-ic"><svg class="icon icon-lg"><use href="#i-lock"></use></svg></span>
+        <div class="gate-body">
+          <b id="gateTitle">Finish your profile to start browsing</b>
+          <p id="gateText">Other families can only be shown to a completed, published profile — the same rule protects your family's details from anyone who has not filled theirs in.</p>
+          <div class="gate-missing" id="gateMissing"></div>
+          <button class="btn-primary" id="gateBtn">Complete my profile →</button>
+        </div>
+      </div>
+
+      <!-- ============ SEARCH VIEW ============ -->
+      <div id="viewSearch">
+      <div class="s3-filters fade-up-in d2">
+        <div class="s3-field"><label data-i18n="s3.filterLooking">Looking for</label>
+          <select id="filterLooking"><option value="bride" data-i18n="s3.bride">Bride</option><option value="groom" data-i18n="s3.groom">Groom</option></select></div>
+        <div class="s3-field"><label data-i18n="s3.filterGotram">Gotram</label>
+          <select id="filterGotram"><option value="" data-i18n="s3.allGotrams">All Gotrams</option></select></div>
+        <div class="s3-field"><label data-i18n="s3.filterKeyword">Keyword</label>
+          <input id="searchKeyword" type="text" placeholder="Name, job, city…"></div>
+        <div class="s3-field"><label data-i18n="s3.filterIncome">Min income</label>
+          <select id="filterIncome"><option value="" data-i18n="s3.allIncomes">Any</option><option value="5">5+ LPA</option><option value="10">10+ LPA</option><option value="15">15+ LPA</option><option value="25">25+ LPA</option></select></div>
+        <button class="s3-search-btn" id="doSearchBtn"><svg class="icon"><use href="#i-search"></use></svg> <span data-i18n="s3.searchBtn">Search</span></button>
+      </div>
+      <div class="s3-popular-row">
+        <div class="s3-popular"><b data-i18n="s3.popular">Popular:</b>
+          <span class="chip">Markandeya</span><span class="chip">Padmarishi</span><span class="chip">Kashyapa</span><span class="chip">Vasishta</span>
+        </div>
+        <button class="s3-more-filters" id="moreFiltersBtn"><svg class="icon"><use href="#i-filter"></use></svg> <span data-i18n="s3.moreFilters">More Filters</span></button>
+      </div>
+
+      <div class="s3-morefilters" id="moreFiltersPanel" hidden>
+        <div class="s3-field"><label data-i18n="s3.filterProfession2">Profession</label>
+          <input id="filterProfession" type="text" placeholder="e.g. Doctor, Engineer"></div>
+        <div class="s3-field"><label data-i18n="s3.filterPlace">Place</label>
+          <input id="filterPlace" type="text" placeholder="Native or work city"></div>
+        <div class="s3-field"><label data-i18n="s3.filterAge">Age from</label>
+          <input id="filterMinAge" type="number" min="18" max="70" placeholder="21"></div>
+        <div class="s3-field"><label data-i18n="s3.filterAgeTo">Age to</label>
+          <input id="filterMaxAge" type="number" min="18" max="70" placeholder="32"></div>
+        <label class="s3-check"><input type="checkbox" id="filterOnlyPhoto"> <span data-i18n="s3.withPhoto">With photo only</span></label>
+        <button type="button" class="btn-ghost" id="clearFiltersBtn" data-i18n="s3.clearFilters">Clear filters</button>
+      </div>
+
+      <div class="s3-vp-head">
+        <h2><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span> <span data-i18n="s3.verifiedProfiles">Verified Profiles</span> <span class="count" id="resultCount">Loading…</span></h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13px;color:var(--ink-soft);" data-i18n="s3.sortBy">Sort by:</span>
+          <select class="sort-select"><option data-i18n="s3.recentlyJoined">Recently Joined</option></select>
+        </div>
+      </div>
+
+      <div class="free-note" id="freeNote" hidden>
+        <svg class="icon"><use href="#i-lock"></use></svg>
+        <span data-i18n="s3.freeNote">You are on the free plan — name, gotram, place and age are shown. Photo, profession, income and contact open with Premium, or the moment a family accepts your interest.</span>
+        <button type="button" class="link-btn" data-view-go="subscription" data-i18n="s3.seePlans">See plans</button>
+      </div>
+
+      <div class="profile-grid" id="profileGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--ink-soft);">Loading profiles…</div>
+      </div>
+
+      <div class="s3-loadmore"><button class="btn-outline-wide" id="loadMoreBtn" data-i18n="s3.loadMore">Load More Profiles ⌄</button></div>
+      </div><!-- /#viewSearch -->
+
+      <!-- ============ LIST VIEWS (drafts / recommended / interests / etc.) ============ -->
+      <div id="viewList" hidden>
+        <div class="profile-grid" id="listGrid"></div>
+      </div>
+
+      <div class="s3-bottom-stats reveal">
+        <div class="st"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span><div><b data-i18n="s3.bstat1t">ID Verified Profiles</b><span data-i18n="s3.bstat1s">Government Verified</span></div></div>
+        <div class="st"><span class="ic"><svg class="icon"><use href="#i-lock"></use></svg></span><div><b data-i18n="s3.bstat2t">100% Privacy</b><span data-i18n="s3.bstat2s">Your data is safe</span></div></div>
+        <div class="st"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span><div><b data-i18n="s3.bstat3t">Secure Platform</b><span data-i18n="s3.bstat3s">Trusted by thousands</span></div></div>
+        <div class="st"><span class="ic"><svg class="icon icon-lg"><use href="#i-user"></use></svg></span><div><b data-i18n="s3.bstat4t">Expert Support</b><span data-i18n="s3.bstat4s">We're here to help</span></div></div>
+      </div>
+    </main>
+
+    <aside class="s3-right">
+      <div class="panel reveal" id="draftsPanel">
+        <div class="panel-head"><h3><svg class="icon"><use href="#i-bookmark"></use></svg> <span data-i18n="s3.yourDrafts">Your Drafts</span></h3></div>
+        <p style="font-size:13px;color:var(--ink-soft);margin:6px 0 0;">Loading…</p>
+      </div>
+
+      <div class="panel premium-panel reveal d1">
+        <div class="panel-head"><h3><svg class="icon"><use href="#i-crown"></use></svg> <span data-i18n="s3.premiumBoost">Premium Boost</span></h3><a data-i18n="s3.viewPlans">View Plans</a></div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:-6px 0 8px;" data-i18n="s3.premiumDesc">Increase visibility and find the perfect match faster!</p>
+        <div class="plan-row"><div class="left"><span class="ic"><svg class="icon"><use href="#i-ticket"></use></svg></span> <b data-i18n="s3.expressBoost">Express Boost</b></div>₹999</div>
+        <div class="plan-row"><div class="left"><span class="ic"><svg class="icon"><use href="#i-family"></use></svg></span> <b data-i18n="s3.goldPackage">Gold Family Package</b></div>₹2,499</div>
+        <div class="plan-row"><div class="left"><span class="ic"><svg class="icon"><use href="#i-crown"></use></svg></span> <b data-i18n="s3.vipMatch">VIP Matchmaker</b></div>₹4,999</div>
+        <button class="btn-upgrade" id="upgradeBtn" data-i18n="s3.upgradeNow">Upgrade Now</button>
+        <div class="redeem-box">
+          <label data-i18n="s3.haveCode">Already paid? Enter your activation code</label>
+          <div class="redeem-row">
+            <input type="text" id="redeemInput" placeholder="PADMA-XXXXXX" autocomplete="off" spellcheck="false">
+            <button type="button" id="redeemBtn" data-i18n="s3.activate">Activate</button>
+          </div>
+          <p class="premium-state" id="premiumState" hidden></p>
+        </div>
+      </div>
+
+      <div class="panel waitlist-panel reveal d2">
+        <div class="phone-mock"></div>
+        <h3 data-i18n="s3.candidateAppSoon">Candidate App Coming Soon!</h3>
+        <p data-i18n="s3.candidateAppDesc">Be the first to know when our Candidate App launches.</p>
+        <input type="tel" id="waitlistInput" data-i18n-placeholder="s2.notifyPlaceholder" placeholder="Enter mobile number">
+        <button class="btn-join" id="waitlistBtn" data-i18n="s3.joinWaitlist">Join Waitlist</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="s3-footer">
+    <span data-i18n="s2.copyright">© 2024 Padmasaliya Matrimonial. All rights reserved.</span>
+    <a data-i18n="s2.privacy">Privacy Policy</a>|<a data-i18n="s2.terms">Terms of Use</a>|<a data-i18n="s2.guidelines">Community Guidelines</a>
+    &nbsp;&nbsp;<span data-i18n="s3.madeWith">Made with <svg class="icon" style="color:#e07a3c;width:14px;height:14px;"><use href="#i-heart-fill"></use></svg> for Padmasaliya Community</span>
+  </footer>
+
+</section>
+<!-- Profile detail / actions, filled in by dashboard.js -->
+<div class="pm-backdrop" id="profileModal" hidden>
+  <div class="pm-sheet" role="dialog" aria-modal="true" aria-labelledby="pmName">
+    <button class="pm-close" id="pmClose" aria-label="Close">&times;</button>
+    <div id="pmBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/main.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

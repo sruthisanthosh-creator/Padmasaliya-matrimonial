@@ -1,0 +1,6 @@
+# Only the live website folder goes to GitHub. Everything else in this
+# MATRIMONIAL folder — old zip exports, screenshots, spec PDFs, older
+# fixed1/fixednew drafts — stays local and out of the repo.
+/*
+!/padmasaliya-matrimonial-website8-fixed10
+!/.gitignore

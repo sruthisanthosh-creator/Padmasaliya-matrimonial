@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padmasaliya Matrimonial — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@500;600;700&family=Noto+Sans+Telugu:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/png" href="assets/img/logo-icon.png">
+<link rel="apple-touch-icon" href="assets/img/logo-icon.png">
+<meta name="description" content="Padmasaliya Matrimonial — an exclusive, verified matchmaking platform for the Padmasaliya community. Create profiles, search trusted matches and connect on shared values.">
+<meta name="theme-color" content="#7a1a2b">
+<meta property="og:title" content="Padmasaliya Matrimonial">
+<meta property="og:description" content="Rooted in Tradition, United by Values. Verified matrimonial profiles for the Padmasaliya community.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="assets/img/logo-icon.png">
+<meta name="twitter:card" content="summary">
+<style>
+  body{background:linear-gradient(180deg,#f6efe0,#efe4cf 60%);min-height:100vh;}
+  .login-wrap{max-width:480px;margin:0 auto;padding:50px 20px 60px;}
+  .login-brand{text-align:center;margin-bottom:26px;}
+  .login-brand .brand-name b{font-size:26px;}
+  .login-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px 30px;box-shadow:var(--shadow);}
+  .login-card h1{font-family:var(--font-display);color:var(--maroon);font-size:26px;margin:0 0 6px;text-align:center;}
+  .login-card > p.sub{color:var(--ink-soft);font-size:14px;text-align:center;margin:0 0 28px;}
+  .phone-field{display:flex;gap:8px;margin-bottom:18px;}
+  .phone-field .cc{width:70px;border:1px solid var(--line);border-radius:9px;padding:13px 8px;font-size:14.5px;text-align:center;background:var(--cream);font-weight:600;color:var(--ink);}
+  .phone-field input{flex:1;border:1px solid var(--line);border-radius:9px;padding:13px 14px;font-size:15px;font-family:inherit;}
+  .login-note{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-top:16px;line-height:1.6;}
+  .otp-row{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+  .otp-row input{width:46px;height:54px;text-align:center;font-size:22px;font-weight:700;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;color:var(--maroon);}
+  .otp-row input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,151,63,.15);}
+  .otp-meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-soft);margin-bottom:22px;}
+  .resend-link{color:var(--maroon);font-weight:700;cursor:pointer;}
+  .resend-link.disabled{color:var(--ink-soft);cursor:default;font-weight:500;}
+  .login-step{display:none;}
+  .login-step.active{display:block;}
+  .change-number{display:block;text-align:center;font-size:13px;color:var(--maroon);font-weight:600;margin-top:14px;cursor:pointer;}
+  .demo-hint{background:#fbf0dc;border:1px dashed var(--gold-light);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#8a611f;text-align:center;margin-bottom:20px;}
+  .otp-error{color:#c0392b;font-size:13px;text-align:center;margin:-8px 0 14px;display:none;}
+  .btn-primary.full{width:100%;padding:14px;}
+  #switchChannelBtn{margin-top:10px;}
+</style>
+</head>
+
+<body>
+<svg style="display:none">
+<defs>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 8.4-7 9-4-.6-7-4.4-7-9V6l7-3z"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 8.4-7 9-4-.6-7-4.4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.6.4 4.5 2.5 4.5 5.3"/></symbol>
+<symbol id="i-family" viewBox="0 0 24 24"><circle cx="8" cy="7" r="2.6"/><circle cx="16" cy="7" r="2.6"/><path d="M3 20c0-3 2.2-5.4 5-5.4s5 2.4 5 5.4M11 20c0-3 2.2-5.4 5-5.4s5 2.4 5 5.4"/></symbol>
+<symbol id="i-couple" viewBox="0 0 24 24"><circle cx="9" cy="7" r="2.6"/><circle cx="16" cy="9" r="2.2"/><path d="M4 20c0-3 2.2-5.4 5-5.4s5 2.4 5 5.4M14 20c0-2.4 1.8-4.4 4-4.4s4 2 4 4.4"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16M7 12h10M10 19h4"/></symbol>
+<symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3z"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.4 4.5 6 4c2-.3 3.8.7 6 3 2.2-2.3 4-3.3 6-3 3.6.5 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></symbol>
+<symbol id="i-heart-fill" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.4 4.5 6 4c2-.3 3.8.7 6 3 2.2-2.3 4-3.3 6-3 3.6.5 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></symbol>
+<symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8z"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 3h16l-2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.9 7.9 0 0 0 0-3l2-1.6-2-3.4-2.4.7a8 8 0 0 0-2.6-1.5L14 2h-4l-.4 2.7a8 8 0 0 0-2.6 1.5l-2.4-.7-2 3.4L4.6 10.5a7.9 7.9 0 0 0 0 3l-2 1.6 2 3.4 2.4-.7a8 8 0 0 0 2.6 1.5L10 22h4l.4-2.7a8 8 0 0 0 2.6-1.5l2.4.7 2-3.4-2-1.6z"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+<symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="2" y="13" width="5" height="7" rx="2"/><rect x="17" y="13" width="5" height="7" rx="2"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8z"/><path d="M13 6v12" stroke-dasharray="2 3"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.7 2.2c-.9.5-1.2 1-1.2 1.8"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-diya" viewBox="0 0 60 60"><path d="M6 41c0 4 24 6 24 6s24-2 24-6c0-3.2-8-5.2-24-5.2S6 37.8 6 41z" fill="#c9973f"/><path d="M14 41c2 2 12 3 16 3s14-1 16-3" fill="none" stroke="#8a611f" stroke-width="1"/><ellipse cx="30" cy="30" rx="3" ry="4" fill="#7a1a2b"/><path d="M30 27c-3.5-5-1.5-9 0-12.5 1.5 3.5 3.5 7.5 0 12.5z" fill="#f4b23e" stroke="none"/><path d="M30 25c-1.8-2.6-.8-4.6 0-6.4 .8 1.8 1.8 3.8 0 6.4z" fill="#fff3d1" stroke="none"/></symbol>
+</defs>
+</svg>
+
+
+
+
+
+<div class="login-wrap">
+  <div class="login-brand fade-up-in">
+    <img src="assets/img/logo-icon.png" alt="Padmasaliya Matrimonial" width="80" height="62" style="margin:0 auto 6px;display:block;object-fit:contain;">
+    <div class="brand-name" data-i18n="brand.name"><b>PADMASALIYA MATRIMONIAL</b></div>
+    <div class="brand-tagline" data-i18n="brand.tagline">Rooted in Tradition, United by Values</div>
+  </div>
+
+  <div class="login-card fade-up-in d1">
+
+    <!-- STEP 1: phone number -->
+    <div class="login-step active" id="stepPhone">
+      <h1 data-i18n="login.title">Parent Login</h1>
+      <p class="sub" data-i18n="login.subtitle">Enter your mobile number to continue</p>
+      <div id="phoneFieldWrap">
+        <label style="font-size:13px;color:var(--ink-soft);display:block;margin-bottom:8px;" data-i18n="login.mobileLabel">Mobile Number</label>
+        <div class="phone-field">
+          <div class="cc">+91</div>
+          <input type="tel" id="phoneInput" maxlength="10" data-i18n-placeholder="login.mobilePlaceholder" placeholder="Enter 10-digit number">
+        </div>
+      </div>
+      <div id="emailFieldWrap" hidden>
+        <label style="font-size:13px;color:var(--ink-soft);display:block;margin-bottom:8px;">Email Address</label>
+        <div class="phone-field">
+          <input type="email" id="emailInput" placeholder="you@example.com" style="flex:1;border:1px solid var(--line);border-radius:9px;padding:13px 14px;font-size:15px;font-family:inherit;">
+        </div>
+      </div>
+      <div class="otp-error" id="phoneError" data-i18n="login.phoneError">Please enter a valid 10-digit mobile number.</div>
+      <button class="btn-primary full" id="sendOtpBtn">Send login link →</button>
+      <span class="change-number" id="switchChannelBtn">Use email instead</span>
+      <p class="login-note" data-i18n="login.consentNote">By continuing, you agree to our Terms of Use and Privacy Policy. We'll never share your number without consent.</p>
+    </div>
+
+    <!-- STEP 2: OTP verify -->
+    <div class="login-step" id="stepOtp">
+      <h1 data-i18n="login.otpTitle">Verify OTP</h1>
+      <p class="sub" id="otpSentTo" data-i18n="login.otpSubtitle">Enter the 6-digit code sent to +91 XXXXXXXXXX</p>
+
+      <div class="demo-hint">Check your SMS or email for the 6-digit verification code.</div>
+
+      <div class="otp-row">
+        <input type="text" maxlength="1" class="otp-box">
+        <input type="text" maxlength="1" class="otp-box">
+        <input type="text" maxlength="1" class="otp-box">
+        <input type="text" maxlength="1" class="otp-box">
+        <input type="text" maxlength="1" class="otp-box">
+        <input type="text" maxlength="1" class="otp-box">
+      </div>
+      <div class="otp-error" id="otpError" data-i18n="login.otpError">Incorrect OTP. Please try again.</div>
+
+      <div class="otp-meta">
+        <span data-i18n="login.didntReceive">Didn't receive the code?</span>
+        <span class="resend-link disabled" id="resendLink" data-i18n="login.resendIn">Resend in 30s</span>
+      </div>
+
+      <button class="btn-primary full" id="verifyOtpBtn" data-i18n="login.verifyBtn">Verify &amp; Continue</button>
+      <span class="change-number" id="changeNumberBtn" data-i18n="login.changeNumber">← Change mobile number</span>
+    </div>
+
+    <!-- STEP 2b: magic link sent (email login) -->
+    <div class="login-step" id="stepEmailSent">
+      <h1>Check your email</h1>
+      <p class="sub" id="emailSentTo">We sent a login link to your email.</p>
+      <div class="demo-hint">Open the email and tap <b>Log in</b>. You'll be signed in automatically. The link works for 1 hour.</div>
+      <p class="login-note">Can't find it? Check your <b>Spam</b> or <b>Promotions</b> folder.</p>
+      <span class="change-number" id="resendLinkBtn">Resend the email</span>
+      <span class="change-number" id="changeEmailBtn">← Use a different email</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
