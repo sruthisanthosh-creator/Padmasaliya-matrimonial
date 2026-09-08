@@ -88,10 +88,10 @@
     <div class="s3-pill"><svg class="icon"><use href="#i-couple"></use></svg> <span class="label" data-i18n="s3.bgApp">Bride/Groom App</span><span class="soon" data-i18n="s2.comingSoon2">SOON</span></div>
     <div class="s3-topbar-right">
       <span data-i18n="s3.help" style="display:flex;align-items:center;gap:6px;"><svg class="icon"><use href="#i-help"></use></svg>Help</span>
-      <div class="s3-bell"><svg class="icon"><use href="#i-bell"></use></svg><span class="dot">3</span></div>
+      <div class="s3-bell" style="cursor:pointer;" onclick="location.href='dashboard.html'"><svg class="icon"><use href="#i-bell"></use></svg><span class="dot" id="bellDot" hidden>0</span></div>
       <div class="s3-user">
-        <div class="s3-avatar">RP</div>
-        <div><b>Raghav Padmasali</b><span data-i18n="s3.parentAccount">Parent Account</span></div>
+        <div class="s3-avatar">·</div>
+        <div><b>&nbsp;</b><span data-i18n="s3.parentAccount">Parent Account</span></div>
       </div>
       <div class="lang-dd" data-langdd>
         <button class="lang-dd-btn" data-dd-toggle><svg class="icon"><use href="#i-globe"></use></svg> <span data-i18n-lang-label>English</span> <svg class="icon icon-sm"><use href="#i-chevron-down"></use></svg></button>
@@ -107,24 +107,27 @@
 
   <div class="s3-body">
     <aside class="s3-sidebar">
+      <!-- Name, plan and counts are filled in from the signed-in account by
+           create-profile.js. Nothing here is a placeholder number: a brand new
+           account sees no counts at all until it actually has something. -->
       <div class="s3-side-user">
-        <div class="s3-avatar">RP</div>
+        <div class="s3-avatar">·</div>
         <div>
-          <b>Raghav Padmasali</b>
+          <b>&nbsp;</b>
           <span data-i18n="s3.parentAccount">Parent Account</span>
-          <div class="verified-chip"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span> <span data-i18n="s3.idVerified">ID Verified</span></div>
+          <div class="verified-chip" id="planChip" hidden><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span> <span id="planChipText">Free plan</span></div>
         </div>
       </div>
       <div class="s3-nav-item" onclick="location.href='dashboard.html'" style="cursor:pointer;"><svg class="icon"><use href="#i-home"></use></svg> <span data-i18n="s3.nav.dashboard">Dashboard</span></div>
       <div class="s3-nav-item active"><svg class="icon"><use href="#i-plus"></use></svg> <span data-i18n="s3.nav.create">Create Profile</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-search"></use></svg> <span data-i18n="s3.nav.search">Search Profiles</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-bookmark"></use></svg> <span data-i18n="s3.nav.drafts">Drafts (Saved)</span><span class="count">12</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-send"></use></svg> <span data-i18n="s3.nav.recommended">Recommended</span><span class="count">8</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-heart"></use></svg> <span data-i18n="s3.nav.received">Received Interests</span><span class="count">2</span></div>
-      <div class="s3-nav-item"><svg class="icon icon-lg"><use href="#i-user"></use></svg> <span data-i18n="s3.nav.myProfiles">My Profiles</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-crown"></use></svg> <span data-i18n="s3.nav.subscription">Subscription</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-headset"></use></svg> <span data-i18n="s3.nav.support">Help &amp; Support</span></div>
-      <div class="s3-nav-item"><svg class="icon"><use href="#i-gear"></use></svg> <span data-i18n="s3.nav.settings">Settings</span></div>
+      <div class="s3-nav-item" data-goto="search" style="cursor:pointer;"><svg class="icon"><use href="#i-search"></use></svg> <span data-i18n="s3.nav.search">Search Profiles</span></div>
+      <div class="s3-nav-item" data-goto="drafts" style="cursor:pointer;"><svg class="icon"><use href="#i-bookmark"></use></svg> <span data-i18n="s3.nav.drafts">Drafts (Saved)</span><span class="count" id="cntDrafts" hidden>0</span></div>
+      <div class="s3-nav-item" data-goto="recommended" style="cursor:pointer;"><svg class="icon"><use href="#i-send"></use></svg> <span data-i18n="s3.nav.recommended">Recommended</span><span class="count" id="cntRecommended" hidden>0</span></div>
+      <div class="s3-nav-item" data-goto="received" style="cursor:pointer;"><svg class="icon"><use href="#i-heart"></use></svg> <span data-i18n="s3.nav.received">Received Interests</span><span class="count" id="cntReceived" hidden>0</span></div>
+      <div class="s3-nav-item" data-goto="myprofile" style="cursor:pointer;"><svg class="icon icon-lg"><use href="#i-user"></use></svg> <span data-i18n="s3.nav.myProfiles">My Profile</span></div>
+      <div class="s3-nav-item" data-goto="subscription" style="cursor:pointer;"><svg class="icon"><use href="#i-crown"></use></svg> <span data-i18n="s3.nav.subscription">Subscription</span></div>
+      <div class="s3-nav-item" onclick="location.href='help.html'" style="cursor:pointer;"><svg class="icon"><use href="#i-headset"></use></svg> <span data-i18n="s3.nav.support">Help &amp; Support</span></div>
+      <div class="s3-nav-item" data-goto="settings" style="cursor:pointer;"><svg class="icon"><use href="#i-gear"></use></svg> <span data-i18n="s3.nav.settings">Settings</span></div>
       <div class="s3-nav-item" style="cursor:pointer;" onclick="supabaseClient.auth.signOut().then(()=>window.location.href='home.html');"><svg class="icon"><use href="#i-logout"></use></svg> <span data-i18n="s3.nav.logout">Logout</span></div>
       <div class="s3-trust-box">
         <span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span>

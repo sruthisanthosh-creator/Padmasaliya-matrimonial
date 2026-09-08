@@ -46,6 +46,7 @@
 
   let pickedFile = null;
   let existingPhotoPath = null;
+  let removePhoto = false;      // they had a photo and chose to take it off
   let currentStatus = 'draft';
   let hasProfile = false;
   const chosenInterests = new Set();
@@ -55,6 +56,60 @@
   }
 
   const val = (el) => (el && el.value ? el.value.trim() : '');
+
+  // ---------- the shell around the form (name, plan, counts) ----------
+  // Everything here comes from the signed-in account. A brand new account
+  // shows no counts at all, rather than the sample numbers this page used
+  // to carry over from the design mock-up.
+  async function fillShell() {
+    let status = null, counts = null;
+    try { status = await supabaseClient.rpc('my_status', {}).then((r) => r.data); } catch (e) {}
+    try { counts = await supabaseClient.rpc('my_counts', {}).then((r) => r.data); } catch (e) {}
+
+    const { data: s } = await supabaseClient.auth.getSession();
+    const user = s && s.session && s.session.user;
+    const p = status && status.profile;
+
+    const name = (p && p.full_name)
+      ? t('Parent of ', 'பெற்றோர்: ', 'తల్లిదండ్రులు: ') + p.full_name.split(' ')[0]
+      : (user && (user.email || (user.phone && '+' + user.phone)))
+        || t('Parent Account', 'பெற்றோர் கணக்கு', 'తల్లిదండ్రుల ఖాతా');
+    const initials = String(name).replace(/[^A-Za-z ]/g, '').trim().split(/\s+/)
+      .slice(0, 2).map((w) => w[0] || '').join('').toUpperCase() || 'PP';
+
+    document.querySelectorAll('.s3-avatar').forEach((el) => { el.textContent = initials; });
+    document.querySelectorAll('.s3-user > div > b, .s3-side-user > div > b')
+      .forEach((el) => { el.textContent = name; });
+
+    const chip = $('planChip');
+    if (chip && status) {
+      chip.hidden = false;
+      $('planChipText').textContent = status.premium
+        ? t('Premium member', 'பிரீமியம் உறுப்பினர்', 'ప్రీమియం సభ్యుడు')
+        : t('Free plan', 'இலவச திட்டம்', 'ఉచిత ప్లాన్');
+    }
+
+    if (counts) {
+      const set = (id, n) => {
+        const el = $(id);
+        if (!el) return;
+        el.textContent = n;
+        el.hidden = !n;
+      };
+      set('cntDrafts', counts.drafts);
+      set('cntRecommended', counts.recommended);
+      set('cntReceived', counts.received);
+      const dot = $('bellDot');
+      if (dot) { dot.textContent = counts.unread; dot.hidden = !counts.unread; }
+    }
+  }
+
+  // Sidebar links across to the matching dashboard view.
+  document.querySelectorAll('[data-goto]').forEach((el) => {
+    el.addEventListener('click', () => {
+      window.location.href = 'dashboard.html#' + el.dataset.goto;
+    });
+  });
 
   // ---------- interests ----------
   const INTEREST_LIST = [
@@ -163,18 +218,51 @@
         return;
       }
       pickedFile = f;
+      removePhoto = false;
       renderPhotoPreview(URL.createObjectURL(f));
     });
   }
 
+  // A photo is optional, so it also has to be undoable — otherwise picking
+  // one by mistake would be permanent.
   function renderPhotoPreview(url) {
     if (!photoBox) return;
     photoBox.innerHTML =
       '<img src="' + url + '" alt="" ' +
       'style="width:110px;height:110px;object-fit:cover;border-radius:12px;margin:0 auto 12px;display:block;">' +
-      '<button type="button" class="btn-outline-wide" id="choosePhotoBtn">' +
-      t('Change Photo', 'படத்தை மாற்று', 'ఫోటో మార్చు') + '</button>';
+      '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+        '<button type="button" class="btn-outline-wide" id="choosePhotoBtn" style="width:auto;padding:10px 18px;">' +
+          t('Change Photo', 'படத்தை மாற்று', 'ఫోటో మార్చు') + '</button>' +
+        '<button type="button" class="btn-outline-wide" id="removePhotoBtn" ' +
+          'style="width:auto;padding:10px 18px;color:#a33;border-color:#e6c9c9;">' +
+          t('Remove Photo', 'படத்தை நீக்கு', 'ఫోటో తీసివేయి') + '</button>' +
+      '</div>';
     bindChoose();
+    const rm = $('removePhotoBtn');
+    if (rm) rm.addEventListener('click', clearPhoto);
+  }
+
+  function renderPhotoEmpty() {
+    if (!photoBox) return;
+    photoBox.innerHTML =
+      '<svg class="icon icon-lg" style="color:var(--gold);"><use href="#i-user"></use></svg>' +
+      '<p>' + t('Upload a clear, recent photo (JPG or PNG, max 5MB). Optional — a profile works without one.',
+                'தெளிவான, சமீபத்திய படம் (JPG/PNG, அதிகபட்சம் 5MB). விருப்பமானது.',
+                'స్పష్టమైన ఇటీవలి ఫోటో (JPG/PNG, గరిష్టంగా 5MB). ఐచ్ఛికం.') + '</p>' +
+      '<button type="button" class="btn-outline-wide" id="choosePhotoBtn">' +
+      t('Choose File', 'கோப்பைத் தேர்ந்தெடு', 'ఫైల్ ఎంచుకోండి') + '</button>';
+    bindChoose();
+  }
+
+  function clearPhoto() {
+    pickedFile = null;
+    if (fileInput) fileInput.value = '';
+    // If a photo was already saved, mark it for removal when they next save.
+    if (existingPhotoPath) removePhoto = true;
+    renderPhotoEmpty();
+    showToast(existingPhotoPath
+      ? t('Photo will be removed when you save.', 'சேமிக்கும்போது படம் நீக்கப்படும்.', 'సేవ్ చేసినప్పుడు ఫోటో తీసివేయబడుతుంది.')
+      : t('Photo removed.', 'படம் நீக்கப்பட்டது.', 'ఫోటో తీసివేయబడింది.'));
   }
 
   // ---------- prefill ----------
@@ -184,6 +272,7 @@
     if (!session) { window.location.href = 'login.html'; return; }
 
     renderChips();
+    fillShell();
 
     const { data: existing } = await supabaseClient
       .from('parent_profiles').select('*')
@@ -310,6 +399,9 @@
     if (newPath) {
       profile.photo_path = newPath;
       profile.photo_url = null;   // v1 stored a public URL; the bucket is private now
+    } else if (removePhoto) {
+      profile.photo_path = null;
+      profile.photo_url = null;
     }
 
     const { error } = await supabaseClient
@@ -323,17 +415,21 @@
       return;
     }
 
-    // Replaced the photo? Clear the old file out of storage.
-    if (newPath && existingPhotoPath && existingPhotoPath !== newPath) {
+    // Replaced or removed the photo? Clear the old file out of storage.
+    if (existingPhotoPath && (removePhoto || (newPath && existingPhotoPath !== newPath))) {
       try { await supabaseClient.storage.from('profile-photos').remove([existingPhotoPath]); } catch (e) {}
+      existingPhotoPath = null;
     }
     if (newPath) existingPhotoPath = newPath;
+    removePhoto = false;
     pickedFile = null;
     hasProfile = true;
     currentStatus = profile.status;
 
     if (publish) {
-      window.location.href = 'dashboard.html';
+      // Land on My Profile, so the first thing they see after saving is the
+      // profile they just created, with its Edit and Delete controls.
+      window.location.href = 'dashboard.html#myprofile';
     } else {
       btn.textContent = original;
       if (draftBtn) draftBtn.disabled = false;
@@ -352,17 +448,16 @@
   // ---------- delete ----------
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
-      const ok = window.confirm(t(
-        'Delete this profile for good? The photo and every interest connected to it go too. This cannot be undone.',
-        'இந்த சுயவிவரத்தை நிரந்தரமாக நீக்கவா? திரும்பப் பெற முடியாது.',
-        'ఈ ప్రొఫైల్‌ను శాశ్వతంగా తొలగించాలా? తిరిగి పొందలేరు.'));
-      if (!ok) return;
+      const answer = await askDeleteReason();
+      if (!answer) return;
       deleteBtn.disabled = true;
       try {
         if (existingPhotoPath) {
           try { await supabaseClient.storage.from('profile-photos').remove([existingPhotoPath]); } catch (e) {}
         }
-        const { error } = await supabaseClient.rpc('delete_my_profile', {});
+        const { error } = await supabaseClient.rpc('delete_my_profile', {
+          p_reason: answer.reason, p_details: answer.details
+        });
         if (error) throw error;
         showToast(t('Profile deleted.', 'நீக்கப்பட்டது.', 'తొలగించబడింది.'));
         setTimeout(() => { window.location.href = 'dashboard.html'; }, 900);

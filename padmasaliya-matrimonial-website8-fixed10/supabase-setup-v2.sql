@@ -710,16 +710,44 @@ begin
   return jsonb_build_object('ok', true, 'status', p_status);
 end $fn$;
 
+-- Why people leave. Kept after the profile is gone, so it has no foreign key
+-- back to it — only the reason, and who said it.
+create table if not exists profile_deletion_feedback (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references auth.users(id) on delete set null,
+  reason     text not null,
+  details    text,
+  created_at timestamptz default now()
+);
+alter table profile_deletion_feedback enable row level security;
+
+drop policy if exists "Admins read deletion feedback" on profile_deletion_feedback;
+create policy "Admins read deletion feedback" on profile_deletion_feedback for select
+  to authenticated using (public.is_admin());
+-- No insert policy: the row is only ever written by delete_my_profile().
+
 -- Delete your own profile for good. Interests, saves and recommendations
 -- pointing at it go with it (foreign keys cascade). The browser deletes
--- the photo from storage first.
-create or replace function public.delete_my_profile()
+-- the photo from storage first. A reason is required, and it outlives the
+-- profile so the committee can see why families are leaving.
+drop function if exists public.delete_my_profile();
+
+create or replace function public.delete_my_profile(
+  p_reason text default null, p_details text default null)
 returns jsonb
 language plpgsql volatile security definer set search_path = public as $fn$
 declare v_uid uuid := auth.uid();
 begin
   if v_uid is null then raise exception 'AUTH_REQUIRED' using errcode = '28000'; end if;
+  if coalesce(btrim(p_reason), '') = '' then
+    raise exception 'REASON_REQUIRED' using errcode = 'P0001';
+  end if;
+
+  insert into profile_deletion_feedback (user_id, reason, details)
+  values (v_uid, btrim(p_reason), nullif(btrim(p_details), ''));
+
   delete from parent_profiles where parent_user_id = v_uid;
+
   return jsonb_build_object('ok', true);
 end $fn$;
 

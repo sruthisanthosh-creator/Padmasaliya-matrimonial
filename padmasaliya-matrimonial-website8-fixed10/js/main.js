@@ -314,6 +314,75 @@ window.addEventListener('scroll', ()=>{
   if(s2navbar) s2navbar.classList.toggle('scrolled', window.scrollY>10);
 });
 
+// ---- "Why are you deleting?" dialog -------------------------------------
+// Used by both the Create/Edit Profile page and the dashboard. Resolves to
+// {reason, details} if they go ahead, or null if they back out. Deleting is
+// permanent, so nothing happens until a reason is actually chosen.
+function askDeleteReason(){
+  return new Promise(function(resolve){
+    const L = (en,ta,te)=> currentLang==='ta'?ta:(currentLang==='te'?te:en);
+    const reasons = [
+      ['found_match',  L('We found a match','ஒரு பொருத்தம் கிடைத்தது','సంబంధం కుదిరింది')],
+      ['married',      L('The wedding is fixed / done','திருமணம் முடிவாகிவிட்டது','వివాహం ఖరారైంది')],
+      ['not_now',      L('Not looking right now','இப்போது தேடவில்லை','ప్రస్తుతం చూడటం లేదు')],
+      ['no_response',  L('Not enough responses','போதிய பதில்கள் இல்லை','తగినంత స్పందన లేదు')],
+      ['privacy',      L('Privacy concern','தனியுரிமை கவலை','గోప్యత ఆందోళన')],
+      ['other',        L('Some other reason','வேறு காரணம்','ఇతర కారణం')]
+    ];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pm-backdrop';
+    wrap.innerHTML =
+      '<div class="pm-sheet" style="max-width:460px;" role="dialog" aria-modal="true">' +
+        '<div class="pm-pad">' +
+          '<h3>' + L('Delete this profile?','இந்த சுயவிவரத்தை நீக்கவா?','ఈ ప్రొఫైల్‌ను తొలగించాలా?') + '</h3>' +
+          '<p class="pm-sub">' + L(
+            'The profile, its photo and every interest connected to it are removed from the site for good. This cannot be undone.',
+            'சுயவிவரம், படம், அதனுடன் தொடர்புடைய அனைத்து ஆர்வங்களும் நிரந்தரமாக நீக்கப்படும். திரும்பப் பெற முடியாது.',
+            'ప్రొఫైల్, ఫోటో మరియు దానికి సంబంధించిన అన్ని ఆసక్తులు శాశ్వతంగా తొలగించబడతాయి. తిరిగి పొందలేరు.') + '</p>' +
+          '<div class="pm-form" style="border-top:none;margin-top:0;padding-top:0;">' +
+            '<label style="display:block;font-size:12px;font-weight:700;color:var(--maroon);margin-bottom:7px;">' +
+              L('Please tell us why','காரணம் தெரிவிக்கவும்','కారణం తెలియజేయండి') + ' *</label>' +
+            '<select id="delReason">' +
+              '<option value="">' + L('Choose a reason…','ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும்…','కారణం ఎంచుకోండి…') + '</option>' +
+              reasons.map(function(r){ return '<option value="'+r[0]+'">'+r[1]+'</option>'; }).join('') +
+            '</select>' +
+            '<textarea id="delDetails" rows="2" placeholder="' +
+              L('Anything else you want to add (optional)','மேலும் ஏதேனும் (விருப்பம்)','ఇంకా ఏమైనా (ఐచ్ఛికం)') + '"></textarea>' +
+          '</div>' +
+          '<div class="pm-actions">' +
+            '<button id="delCancel">' + L('Keep my profile','வேண்டாம்','వద్దు') + '</button>' +
+            '<button id="delGo" class="primary" style="background:#a33;border-color:#a33;">' +
+              L('Delete permanently','நிரந்தரமாக நீக்கு','శాశ్వతంగా తొలగించు') + '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(wrap);
+    document.body.style.overflow = 'hidden';
+
+    function close(result){
+      document.body.style.overflow = '';
+      wrap.remove();
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    }
+    function onKey(e){ if(e.key === 'Escape') close(null); }
+
+    document.addEventListener('keydown', onKey);
+    wrap.addEventListener('click', function(e){ if(e.target === wrap) close(null); });
+    wrap.querySelector('#delCancel').addEventListener('click', function(){ close(null); });
+    wrap.querySelector('#delGo').addEventListener('click', function(){
+      const reason = wrap.querySelector('#delReason').value;
+      if(!reason){
+        showToast(L('Choose a reason first.','முதலில் ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும்.','ముందుగా కారణం ఎంచుకోండి.'));
+        return;
+      }
+      close({ reason: reason, details: wrap.querySelector('#delDetails').value });
+    });
+  });
+}
+
 // toast
 function showToast(msg){
   const t = document.getElementById('toast');

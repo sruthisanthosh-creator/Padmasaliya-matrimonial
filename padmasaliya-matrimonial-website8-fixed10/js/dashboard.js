@@ -101,6 +101,7 @@
     if (m.includes('CODE_USED_UP'))   return t('That code has already been used.', 'குறியீடு ஏற்கனவே பயன்படுத்தப்பட்டது.', 'కోడ్ ఇప్పటికే ఉపయోగించారు.');
     if (m.includes('ALREADY_REDEEMED'))return t('You have already used this code.', 'நீங்கள் ஏற்கனவே பயன்படுத்திவிட்டீர்கள்.', 'మీరు ఇప్పటికే ఉపయోగించారు.');
     if (m.includes('BAD_CONTACT'))    return t('Enter a valid 10-digit mobile number.', 'சரியான 10 இலக்க எண்.', 'సరైన 10 అంకెల నంబర్.');
+    if (m.includes('REASON_REQUIRED'))return t('Please choose a reason.', 'ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும்.', 'కారణం ఎంచుకోండి.');
     if (m.includes('NOT_FOUND'))      return t('That profile is no longer available.', 'சுயவிவரம் இல்லை.', 'ప్రొఫైల్ అందుబాటులో లేదు.');
     if (m.includes('AUTH_REQUIRED'))  return t('Please sign in again.', 'மீண்டும் உள்நுழையவும்.', 'మళ్లీ సైన్ ఇన్ చేయండి.');
     return m || t('Something went wrong.', 'ஏதோ தவறு.', 'ఏదో తప్పు జరిగింది.');
@@ -775,18 +776,15 @@
       }
 
       if (act === 'delete') {
-        const ok = window.confirm(t(
-          'Delete your profile for good? Your photo and every saved interest connected to it go too. This cannot be undone.',
-          'சுயவிவரத்தை நிரந்தரமாக நீக்கவா? திரும்பப் பெற முடியாது.',
-          'ప్రొఫైల్‌ను శాశ్వతంగా తొలగించాలా? తిరిగి పొందలేరు.'));
-        if (!ok) return;
+        const answer = await askDeleteReason();
+        if (!answer) return;
         btn.disabled = true;
         try {
           const path = status && status.profile && status.profile.photo_path;
           if (path) {
             try { await supabaseClient.storage.from('profile-photos').remove([path]); } catch (x) {}
           }
-          await rpc('delete_my_profile', {});
+          await rpc('delete_my_profile', { p_reason: answer.reason, p_details: answer.details });
           showToast(t('Profile deleted.', 'நீக்கப்பட்டது.', 'తొలగించబడింది.'));
           await refreshStatus();
           go('myprofile');
