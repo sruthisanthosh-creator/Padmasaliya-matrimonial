@@ -21,6 +21,20 @@
     font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;}
   .gate-card .btn-primary{padding:11px 22px;font-size:14px;}
 
+  /* The base stylesheet styles .s3-field select but never .s3-field input,
+     so the Keyword box rendered as a bare browser input, narrower and a
+     different height from the dropdowns beside it. Match them. */
+  .s3-field input[type="text"],
+  .s3-field input[type="tel"],
+  .s3-field input[type="number"],
+  .s3-field input[type="date"]{
+    width:100%;border:1px solid var(--line);border-radius:9px;
+    padding:10px;font-size:13.5px;font-family:inherit;
+    background:#fff;color:var(--ink);
+  }
+  .s3-field input:focus,
+  .s3-field select:focus{outline:2px solid var(--gold-light);outline-offset:1px;}
+
   /* ---------- More filters ---------- */
   .s3-morefilters{background:#fff;border:1px solid var(--line);border-radius:16px;
     padding:18px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:end;margin:0 0 16px;}
@@ -182,4 +196,148 @@
     .gate-card{flex-direction:column;}
     .notif-pop{width:min(330px,86vw);}
     .cp-actions .btn-danger{margin-left:0;}
+  }
+
+
+  /* =====================================================================
+     PHONE AND TABLET
+     The dashboard is a three-column desktop layout. Stacking it as-is puts
+     eleven sidebar links between the phone user and the profiles they came
+     to see. Below 900px the sidebar becomes a horizontal strip of tabs
+     pinned under the header instead, so search results are the first thing
+     on screen and navigation is still one tap away.
+     ===================================================================== */
+
+  /* One nav icon was set to icon-lg and rendered three times the others.
+     Normalise every sidebar icon, on all sizes. */
+  .s3-nav-item .icon,
+  .s3-nav-item .icon-lg{width:17px;height:17px;stroke-width:1.9;flex:none;}
+
+  @media (max-width:900px){
+    /* ---- home page: the firewall divider ----
+       The base stylesheet rotates this column 90deg and counter-rotates its
+       children, which is fine as a slim divider between two desktop columns
+       but overlaps into unreadable text once the grid stacks on a phone.
+       Below 900px it is just a card like the two around it. */
+    .firewall-col,
+    .firewall-col *{transform:none !important;}
+    .firewall-col{
+      margin:4px auto;padding:18px;max-width:420px;
+      background:var(--cream-2);border:1px dashed var(--gold-light);border-radius:14px;
+    }
+    .firewall-col .shield{width:56px;height:56px;margin-bottom:10px;}
+    /* the heading carries a <br>, so leave it in — hiding it would run
+       ZERO-KNOWLEDGE and FIREWALL together into one word */
+    .firewall-col b{font-size:12px;line-height:1.6;}
+    .firewall-col p{max-width:none;font-size:12.5px;}
+
+    /* ---- home page: general ---- */
+    .s2-hero h1{font-size:30px;}
+    .s2-portal-grid{gap:16px;}
+    .s2-stats{grid-template-columns:1fr 1fr;gap:12px;}
+    .notify-row{flex-wrap:wrap;gap:8px;}
+    .notify-row input{flex:1 1 100%;}
+    .notify-row button{width:100%;}
+
+    /* ---- header: keep it to one compact line ---- */
+    .s3-topbar{
+      gap:10px;padding:10px 14px;flex-wrap:nowrap;
+      position:sticky;top:0;z-index:50;
+    }
+    .s3-topbar .brand-mark{flex:1;min-width:0;gap:8px;}
+    .s3-topbar .brand-mark img{width:30px;height:26px;}
+    .s3-topbar .brand-name b{font-size:12px;line-height:1.15;}
+    .s3-topbar .brand-tagline{display:none;}
+    .s3-topbar .s3-pill{display:none;}
+    .s3-topbar-right{gap:12px;margin-left:auto;flex:none;}
+    /* the markup carries an inline display:flex, so this needs the weight */
+    .s3-topbar-right > span[data-i18n="s3.help"]{display:none !important;}
+    .s3-user > div{display:none;}       /* name repeats in the tab strip */
+    .lang-dd-btn{padding:7px 10px;font-size:12.5px;}
+    .lang-dd-btn .icon-sm{display:none;}
+
+    /* ---- sidebar becomes a scrolling tab strip ---- */
+    .s3-body{padding:0 0 40px;gap:0;}
+    .s3-sidebar{
+      position:sticky;top:56px;z-index:40;
+      display:flex;gap:8px;align-items:center;
+      overflow-x:auto;overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;
+      background:#fff;border:none;border-bottom:1px solid var(--line);
+      border-radius:0;padding:10px 14px;margin:0;
+      box-shadow:0 2px 8px rgba(90,20,30,.05);
+    }
+    .s3-sidebar::-webkit-scrollbar{display:none;}
+    .s3-side-user,
+    .s3-trust-box{display:none;}
+    .s3-nav-item{
+      flex:0 0 auto;white-space:nowrap;margin:0;
+      padding:9px 14px;border-radius:22px;font-size:13px;
+      background:var(--cream);border:1px solid var(--line);
+    }
+    .s3-nav-item.active{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+    .s3-nav-item.active .icon{color:#fff;}
+    .s3-nav-item .count{margin-left:6px;}
+    .s3-nav-item .soon{margin-left:5px;}
+
+    /* ---- main column ---- */
+    .s3-main{padding:18px 14px 0;}
+    .s3-main h1{font-size:26px;}
+    .s3-main .sub{font-size:13px;}
+    .s3-right{padding:0 14px;}
+    .s3-right .panel{margin-bottom:14px;}
+
+    /* ---- filters ---- */
+    .s3-filters{padding:14px;gap:10px;}
+    .s3-popular-row{flex-wrap:wrap;gap:10px;}
+    .s3-popular{overflow-x:auto;white-space:nowrap;scrollbar-width:none;}
+    .s3-popular::-webkit-scrollbar{display:none;}
+
+    /* ---- results ---- */
+    .s3-vp-head{flex-wrap:wrap;gap:8px;}
+    .profile-grid{grid-template-columns:1fr 1fr;gap:12px;}
+    .profile-photo{height:150px;}
+    .profile-body{padding:12px;}
+    .profile-body h4{font-size:14px;}
+    .profile-actions{flex-direction:column;gap:6px;}
+    .profile-actions .btn-ghost,
+    .profile-actions .btn-solid{flex:none;width:100%;font-size:11px;padding:8px 4px;}
+
+    /* ---- gate + notices ---- */
+    .gate-card{padding:18px;}
+    .gate-body b{font-size:18px;}
+    .free-note{font-size:12px;padding:11px 13px;}
+
+    /* ---- profile detail sheet: full screen on a phone ---- */
+    .pm-backdrop{padding:0;align-items:stretch;}
+    .pm-sheet{max-width:none;border-radius:0;min-height:100%;}
+    .pm-hero{height:min(52vw,240px);}
+    .pm-pad{padding:18px 16px 26px;}
+    .pm-pad h3{font-size:22px;}
+    .pm-actions button{min-width:0;flex:1 1 46%;}
+    .pm-actions button.danger{flex:0 0 auto;}
+
+    /* ---- notifications drop from the right edge ---- */
+    .notif-pop{
+      position:fixed;top:56px;right:8px;left:8px;width:auto;
+      max-height:calc(100vh - 80px);
+    }
+
+    /* ---- create profile ---- */
+    .cp-grid{grid-template-columns:1fr;}
+    .cp-actions{flex-direction:column;align-items:stretch;}
+    .cp-actions button{width:100%;}
+    .cp-actions .btn-danger{margin-left:0;order:3;}
+    .self-actions{flex-direction:column;align-items:stretch;}
+    .self-actions button,.self-actions a{justify-content:center;}
+  }
+
+  /* Very narrow phones: one card per row reads better than two cramped ones */
+  @media (max-width:420px){
+    .profile-grid{grid-template-columns:1fr;}
+    .profile-photo{height:190px;}
+    .profile-actions{flex-direction:row;}
+    .profile-actions .btn-ghost,
+    .profile-actions .btn-solid{flex:1;width:auto;}
+    .s3-main h1{font-size:23px;}
   }
