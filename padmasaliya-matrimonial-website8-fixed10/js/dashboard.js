@@ -166,10 +166,11 @@
       ? '<img src="' + esc(photo) + '" alt="" style="width:100%;height:100%;object-fit:cover;">'
       : icon('user', 'icon-lg');
 
+    // The photo is free now, so the badge only marks the fields that are
+    // still behind Premium (profession, income, contact).
     const lockTag = locked
       ? '<span class="tag-locked">' + icon('lock') + ' ' +
-        (p.has_photo ? t('Photo with Premium', 'படம்: பிரீமியம்', 'ఫోటో: ప్రీమియం')
-                     : t('Premium', 'பிரீமியம்', 'ప్రీమియం')) + '</span>'
+        t('Premium', 'பிரீமியம்', 'ప్రీమియం') + '</span>'
       : '';
 
     // Free plan: the fields simply are not in the payload, so we draw the
@@ -196,7 +197,7 @@
 
     return '' +
       '<div class="profile-card" data-id="' + esc(p.id) + '">' +
-        '<div class="profile-photo' + (locked ? ' is-locked' : '') + '" data-act="open">' + photoInner +
+        '<div class="profile-photo' + (locked && !photo ? ' is-locked' : '') + '" data-act="open">' + photoInner +
           '<span class="tag-idv">' + icon('shield-check') + ' ' +
             t('Community verified', 'சமூக சரிபார்ப்பு', 'సమాజ ధృవీకరణ') + '</span>' + lockTag +
           '<span class="heart" data-act="interest" title="' + esc(heartTitle) + '" ' +
@@ -215,15 +216,38 @@
       '</div>';
   }
 
+  // Recommend to Child needs the bride & groom app to land somewhere, and
+  // that is Phase 2. Until then the button stays visible but locked, so
+  // parents can see what is coming without it silently doing nothing.
+  const CHILD_APP_LIVE = false;
+
+  function soonMsg() {
+    return t('This opens when the Bride & Groom app launches. For now, save the profile to your Drafts.',
+             'மணமகன்/மணமகள் செயலி வரும்போது இது இயங்கும். இப்போதைக்கு வரைவில் சேமிக்கவும்.',
+             'వధూవరుల యాప్ వచ్చినప్పుడు ఇది పనిచేస్తుంది. ప్రస్తుతానికి డ్రాఫ్ట్‌లో సేవ్ చేయండి.');
+  }
+
+  function recommendBtn(p) {
+    if (!CHILD_APP_LIVE) {
+      return '<button class="btn-solid is-soon" data-act="recommend-soon" title="' +
+        esc(t('Opens when the Bride & Groom app launches',
+              'மணமகன்/மணமகள் செயலி வரும்போது இது இயங்கும்',
+              'వధూవరుల యాప్ వచ్చినప్పుడు ఇది పనిచేస్తుంది')) + '">' +
+        icon('lock') + ' ' + t('Recommend to Child', 'பிள்ளைக்கு பரிந்துரை', 'పిల్లలకు సిఫార్సు') +
+        '</button>';
+    }
+    return '<button class="btn-solid" data-act="recommend"' + (p.recommended ? ' data-on="1"' : '') + '>' +
+      icon('send') + ' ' + (p.recommended
+        ? t('Recommended', 'பரிந்துரைத்தது', 'సిఫార్సు చేసారు')
+        : t('Recommend to Child', 'பிள்ளைக்கு பரிந்துரை', 'పిల్లలకు సిఫార్సు')) + '</button>';
+  }
+
   function defaultActions(p) {
     return '<button class="btn-ghost" data-act="save"' + (p.saved ? ' data-on="1"' : '') + '>' +
              icon('bookmark') + ' ' + (p.saved
                ? t('Saved', 'சேமித்தது', 'సేవ్ చేసారు')
                : t('Save to Drafts', 'வரைவில் சேமி', 'డ్రాఫ్ట్‌లో సేవ్')) + '</button>' +
-           '<button class="btn-solid" data-act="recommend"' + (p.recommended ? ' data-on="1"' : '') + '>' +
-             icon('send') + ' ' + (p.recommended
-               ? t('Recommended', 'பரிந்துரைத்தது', 'సిఫార్సు చేసారు')
-               : t('Recommend to Child', 'பிள்ளைக்கு பரிந்துரை', 'పిల్లలకు సిఫార్సు')) + '</button>';
+           recommendBtn(p);
   }
 
   function emptyState(iconName, title, body) {
@@ -410,6 +434,14 @@
                      'உங்கள் பிள்ளை பார்ப்பதற்காக அனுப்பியவை',
                      'మీ పిల్లలు చూడటానికి పంపినవి'),
       load: async () => {
+        if (!CHILD_APP_LIVE) {
+          return emptyState('lock',
+            t('Coming with the Bride & Groom app',
+              'மணமகன்/மணமகள் செயலியுடன் வரும்', 'వధూవరుల యాప్‌తో వస్తుంది'),
+            t('Once your son or daughter has their own login, anything you recommend will land in their inbox. Until then, use Save to Drafts to keep a shortlist.',
+              'உங்கள் பிள்ளைக்கு தனி உள்நுழைவு வந்ததும், நீங்கள் பரிந்துரைப்பவை அவர்களுக்கு சேரும். அதுவரை வரைவில் சேமிக்கவும்.',
+              'మీ పిల్లలకు సొంత లాగిన్ వచ్చాక, మీరు సిఫార్సు చేసినవి వారికి చేరతాయి. అప్పటివరకు డ్రాఫ్ట్‌లో సేవ్ చేయండి.'));
+        }
         const rows = await rpc('my_recommendations', {});
         await signPhotos(rows);
         return rows.length
@@ -563,12 +595,12 @@
         esc(prem ? t('Premium is active', 'பிரீமியம் இயக்கத்தில்', 'ప్రీమియం యాక్టివ్')
                  : t('You are on the free plan', 'இலவச திட்டம்', 'ఉచిత ప్లాన్')) + '</h3>' +
       '<p>' + esc(prem
-        ? t('Photos, profession, income and contact numbers are open to you on every profile.',
+        ? t('Profession, income, education and contact numbers are open to you on every profile.',
             'எல்லா சுயவிவரங்களிலும் முழு விவரம் திறந்துள்ளது.',
             'అన్ని ప్రొఫైల్‌లలో పూర్తి వివరాలు తెరిచి ఉన్నాయి.')
-        : t('You can see every family’s name, gotram, place and age. Photo, profession, income and contact open with Premium — or free of charge the moment a family accepts your interest.',
-            'பெயர், கோத்திரம், ஊர், வயது பார்க்கலாம். மீதி பிரீமியத்தில்.',
-            'పేరు, గోత్రం, ఊరు, వయస్సు చూడవచ్చు. మిగతావి ప్రీమియంలో.')) + '</p>' +
+        : t('You can see every family’s photo, name, gotram, place and age. Profession, income, education and contact open with Premium — or free of charge the moment a family accepts your interest.',
+            'படம், பெயர், கோத்திரம், ஊர், வயது பார்க்கலாம். மீதி பிரீமியத்தில்.',
+            'ఫోటో, పేరు, గోత్రం, ఊరు, వయస్సు చూడవచ్చు. మిగతావి ప్రీమియంలో.')) + '</p>' +
       (prem ? '' : plans.map((pl) =>
         '<div class="plan-row"><div class="left"><span class="ic">' + icon('ticket') + '</span> <b>' +
         esc(pl[0]) + '</b> <span style="font-size:11.5px;color:var(--ink-soft);">' + esc(pl[2]) +
@@ -702,6 +734,7 @@
     if (!me) return;
 
     if (act === 'open' && id) { openProfile(id); return; }
+    if (act === 'recommend-soon') { showToast(soonMsg()); return; }
     if (!id && !btn.dataset.iid) return;
 
     btn.disabled = true;
@@ -836,13 +869,11 @@
 
     const locked = !!p.locked;
     const photo = p.photo_path && photoCache.get(p.photo_path);
+    // The photo is part of the free plan, so it shows on every tier — the
+    // placeholder here only means this family has not uploaded one.
     const hero = photo
       ? '<img src="' + esc(photo) + '" alt="">'
-      : icon('user', 'icon-lg') +
-        (locked && p.has_photo
-          ? '<span class="tag-locked" style="bottom:14px;">' + icon('lock') + ' ' +
-            esc(t('Photo hidden on the free plan', 'படம் மறைக்கப்பட்டுள்ளது', 'ఫోటో దాచబడింది')) + '</span>'
-          : '');
+      : icon('user', 'icon-lg');
 
     const sub = [
       p.age ? p.age + ' ' + t('yrs', 'வயது', 'ఏళ్లు') : null,
@@ -854,9 +885,9 @@
     const upsell = locked
       ? '<div class="pm-upsell"><b>' + icon('lock') + ' ' +
           esc(t('Locked on the free plan', 'இலவசத் திட்டத்தில் பூட்டப்பட்டது', 'ఉచిత ప్లాన్‌లో లాక్')) + '</b>' +
-          esc(t('Photo, profession, income and contact number open with Premium — or free of charge the moment this family accepts your interest.',
-                'படம், தொழில், வருமானம், எண் ஆகியவை பிரீமியத்தில் அல்லது இவர்கள் உங்கள் ஆர்வத்தை ஏற்றால் திறக்கும்.',
-                'ఫోటో, వృత్తి, ఆదాయం, నంబర్ ప్రీమియంలో లేదా వారు మీ ఆసక్తిని అంగీకరిస్తే తెరుచుకుంటాయి.')) +
+          esc(t('Profession, income, education and contact number open with Premium — or free of charge the moment this family accepts your interest.',
+                'தொழில், வருமானம், கல்வி, தொடர்பு எண் ஆகியவை பிரீமியத்தில் அல்லது இவர்கள் உங்கள் ஆர்வத்தை ஏற்றால் திறக்கும்.',
+                'వృత్తి, ఆదాయం, విద్య, సంప్రదింపు నంబర్ ప్రీమియంలో లేదా వారు మీ ఆసక్తిని అంగీకరిస్తే తెరుచుకుంటాయి.')) +
         '</div>'
       : (p.unlocked_by_accept
           ? '<div class="pm-upsell"><b>' + icon('heart-fill') + ' ' +
@@ -892,8 +923,11 @@
         '<div class="pm-actions">' +
           '<button data-pm="save"' + (p.saved ? ' data-on="1"' : '') + '>' + icon('bookmark') + ' ' +
             esc(p.saved ? t('Saved', 'சேமித்தது', 'సేవ్') : t('Save to Drafts', 'வரைவில் சேமி', 'డ్రాఫ్ట్')) + '</button>' +
-          '<button data-pm="recommend"' + (p.recommended ? ' data-on="1"' : '') + '>' + icon('send') + ' ' +
-            esc(p.recommended ? t('Recommended', 'பரிந்துரைத்தது', 'సిఫార్సు') : t('Recommend to child', 'பிள்ளைக்கு', 'పిల్లలకు')) + '</button>' +
+          (CHILD_APP_LIVE
+            ? '<button data-pm="recommend"' + (p.recommended ? ' data-on="1"' : '') + '>' + icon('send') + ' ' +
+              esc(p.recommended ? t('Recommended', 'பரிந்துரைத்தது', 'సిఫార్సు') : t('Recommend to child', 'பிள்ளைக்கு', 'పిల్లలకు')) + '</button>'
+            : '<button class="is-soon" data-pm="recommend-soon" title="' + esc(soonMsg()) + '">' +
+              icon('lock') + ' ' + esc(t('Recommend to child', 'பிள்ளைக்கு', 'పిల్లలకు')) + '</button>') +
           '<button class="primary" data-pm="interest"' + (p.interest ? ' disabled' : '') + '>' +
             icon('heart') + ' ' + esc(p.interest
               ? t('Interest sent', 'அனுப்பியது', 'పంపారు')
@@ -937,6 +971,7 @@
       const act = btn.dataset.pm;
 
       if (act === 'report') { $('pmReport').hidden = !$('pmReport').hidden; return; }
+      if (act === 'recommend-soon') { showToast(soonMsg()); return; }
 
       btn.disabled = true;
       try {
@@ -1022,7 +1057,7 @@
       el.hidden = !n;
     };
     set('cntDrafts', c.drafts);
-    set('cntRecommended', c.recommended);
+    set('cntRecommended', CHILD_APP_LIVE ? c.recommended : 0);
     set('cntReceived', c.received);
     set('cntSent', c.sent);
     if (bellDot) {

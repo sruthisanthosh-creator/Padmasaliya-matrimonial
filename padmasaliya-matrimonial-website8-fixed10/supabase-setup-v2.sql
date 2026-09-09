@@ -254,6 +254,7 @@ language sql stable security definer set search_path = public as $fn$
     'created_for',   p.created_for,
     'age',           case when p.dob is null then null
                           else extract(year from age(p.dob))::int end,
+    'photo_path',    p.photo_path,
     'created_at',    p.created_at,
     'locked',        not p_full,
     -- ---- premium only: never leaves the database for a free account ----
@@ -268,7 +269,6 @@ language sql stable security definer set search_path = public as $fn$
     'work_location',   case when p_full then p.work_location end,
     'about',           case when p_full then p.about end,
     'interests',       case when p_full then to_jsonb(p.interests) end,
-    'photo_path',      case when p_full then p.photo_path end,
     'contact_phone',   case when p_full then p.contact_phone end,
     'has_photo',       (p.photo_path is not null)
   );
@@ -885,12 +885,26 @@ create policy "Admins read the waitlist" on waitlist for select
 
 update storage.buckets set public = false where id = 'profile-photos';
 
-drop policy if exists "Public read profile photos" on storage.objects;
-drop policy if exists "Own photo or premium reads all" on storage.objects;
-create policy "Own photo or premium reads all" on storage.objects for select
+-- A non-raising version of the browse gate, so a storage policy can ask
+-- the question without blowing up. (assert_can_browse() raises instead.)
+create or replace function public.can_browse(uid uuid default auth.uid())
+returns boolean
+language sql stable security definer set search_path = public as $fn$
+  select coalesce(
+    (select p.is_complete and p.status = 'published' and p.deleted_at is null
+       from parent_profiles p where p.parent_user_id = uid), false);
+$fn$;
+
+-- The photo is part of the free plan, so the bucket opens to any member
+-- who has published a completed profile — not only to Premium members.
+-- Someone who has not filled in their own profile still gets nothing.
+drop policy if exists "Public read profile photos"        on storage.objects;
+drop policy if exists "Own photo or premium reads all"    on storage.objects;
+drop policy if exists "Own photo or any browsing member"  on storage.objects;
+create policy "Own photo or any browsing member" on storage.objects for select
   to authenticated using (
     bucket_id = 'profile-photos'
-    and ((storage.foldername(name))[1] = auth.uid()::text or public.is_premium())
+    and ((storage.foldername(name))[1] = auth.uid()::text or public.can_browse())
   );
 
 
