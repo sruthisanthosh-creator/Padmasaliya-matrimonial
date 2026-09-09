@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padmasaliya Matrimonial — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/v2.css?v=3">
+<link rel="stylesheet" href="css/admin.css?v=3">
+<link rel="icon" type="image/png" href="assets/img/logo-icon.png">
+<meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/supabase-client.js?v=3"></script>
+
+<svg style="display:none"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.6.4 4.5 2.5 4.5 5.3"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.6-3 8.4-7 9-4-.6-7-4.4-7-9V6l7-3z"/></symbol>
+<symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8z"/></symbol>
+<symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8z"/><path d="M13 6v12" stroke-dasharray="2 3"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 3h16l-2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.9 7.9 0 0 0 0-3l2-1.6-2-3.4-2.4.7a8 8 0 0 0-2.6-1.5L14 2h-4l-.4 2.7a8 8 0 0 0-2.6 1.5l-2.4-.7-2 3.4L4.6 10.5a7.9 7.9 0 0 0 0 3l-2 1.6 2 3.4 2.4-.7a8 8 0 0 0 2.6 1.5L10 22h4l.4-2.7a8 8 0 0 0 2.6-1.5l2.4.7 2-3.4-2-1.6z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16v4z"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-1.2M6.7 6.7C4 8.4 2 12 2 12s3.6 7 10 7c2 0 3.7-.7 5.2-1.6M14 5.3A9.8 9.8 0 0 1 22 12s-.9 1.7-2.6 3.3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></symbol>
+</defs></svg>
+
+<!-- Everything below is a screen only. Every number and every action goes
+     through a database function that checks is_admin() first, so opening
+     this page without being an admin shows nothing and does nothing. -->
+
+<div class="ad-shell" id="adShell" hidden>
+  <header class="ad-top">
+    <button type="button" class="ad-burger" id="adBurger" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="ad-brand">
+      <img src="assets/img/logo-icon.png" alt="" width="30" height="26">
+      <div><b>PADMASALIYA</b><span>Admin</span></div>
+    </div>
+    <div class="ad-top-right">
+      <a href="dashboard.html" class="ad-link">← Back to site</a>
+      <span class="ad-who" id="adWho"></span>
+      <button type="button" class="ad-link" id="adSignOut">Sign out</button>
+    </div>
+  </header>
+
+  <div class="ad-body">
+    <nav class="ad-nav" id="adNav">
+      <button type="button" class="ad-navitem active" data-tab="overview"><svg class="icon"><use href="#i-home"></use></svg> Overview</button>
+      <button type="button" class="ad-navitem" data-tab="profiles"><svg class="icon"><use href="#i-user"></use></svg> Profiles</button>
+      <button type="button" class="ad-navitem" data-tab="reports"><svg class="icon"><use href="#i-shield"></use></svg> Reports <span class="ad-badge" id="navReports" hidden>0</span></button>
+      <button type="button" class="ad-navitem" data-tab="members"><svg class="icon"><use href="#i-users"></use></svg> Members</button>
+      <button type="button" class="ad-navitem" data-tab="codes"><svg class="icon"><use href="#i-ticket"></use></svg> Premium codes</button>
+      <button type="button" class="ad-navitem" data-tab="waitlist"><svg class="icon"><use href="#i-bell"></use></svg> Waitlist <span class="ad-badge" id="navWaitlist" hidden>0</span></button>
+    </nav>
+
+    <main class="ad-main" id="adMain">
+      <div class="ad-loading">Loading…</div>
+    </main>
+  </div>
+</div>
+
+<!-- Shown instead of the panel when the signed-in account is not an admin -->
+<div class="ad-gate" id="adGate" hidden>
+  <div class="ad-gate-card">
+    <svg class="icon icon-lg"><use href="#i-shield"></use></svg>
+    <h1 id="adGateTitle">Admins only</h1>
+    <p id="adGateText">This account is not an administrator of this site.</p>
+    <a class="btn-primary" href="dashboard.html">Go to the site</a>
+  </div>
+</div>
+
+<!-- Profile create / edit -->
+<div class="ad-modal" id="adModal" hidden>
+  <div class="ad-sheet" role="dialog" aria-modal="true" aria-labelledby="adModalTitle">
+    <div class="ad-sheet-head">
+      <h2 id="adModalTitle">Edit profile</h2>
+      <button type="button" class="ad-close" id="adModalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="ad-sheet-body" id="adModalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<datalist id="dl_city"></datalist>
+<datalist id="dl_state"></datalist>
+<datalist id="dl_country"></datalist>
+<datalist id="dl_gotram"></datalist>
+<datalist id="dl_nakshatra"></datalist>
+<datalist id="dl_rasi"></datalist>
+<datalist id="dl_education"></datalist>
+<datalist id="dl_profession"></datalist>
+<datalist id="dl_interest"></datalist>
+
+<script src="js/reference-data.js?v=3"></script>
+<script src="js/admin.js?v=3"></script>
+</body>
+</html>
