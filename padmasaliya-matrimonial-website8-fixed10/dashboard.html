@@ -64,6 +64,10 @@
 <section id="screen3" class="screen active">
 
   <div class="s3-topbar">
+    <button type="button" class="nav-toggle" id="navToggle"
+            aria-label="Menu" aria-expanded="false" aria-controls="sideNav">
+      <span></span><span></span><span></span>
+    </button>
     <a href="home.html" class="brand-mark" style="text-decoration:none;color:inherit;">
       <img src="assets/img/logo-icon.png" alt="Padmasaliya Matrimonial" width="42" height="34" style="object-fit:contain;">
       <div class="brand-name"><b data-i18n="brand.name" style="font-size:15px;">PADMASALIYA MATRIMONIAL</b><div class="brand-tagline" data-i18n="brand.tagline">Rooted in Tradition, United by Values</div></div>
@@ -94,7 +98,10 @@
   </div>
 
   <div class="s3-body">
-    <aside class="s3-sidebar">
+    <div class="nav-scrim" id="navScrim" hidden></div>
+    <aside class="s3-sidebar" id="sideNav">
+      <button type="button" class="nav-close" id="navClose"
+              aria-label="Close menu">&times;</button>
       <div class="s3-side-user">
         <div class="s3-avatar">RP</div>
         <div>
@@ -198,7 +205,7 @@
       </div>
 
       <div class="s3-bottom-stats reveal">
-        <div class="st"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span><div><b data-i18n="s3.bstat1t">ID Verified Profiles</b><span data-i18n="s3.bstat1s">Government Verified</span></div></div>
+        <div class="st"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span><div><b data-i18n="s3.bstat1t">Community Only</b><span data-i18n="s3.bstat1s">Padmasaliya families</span></div></div>
         <div class="st"><span class="ic"><svg class="icon"><use href="#i-lock"></use></svg></span><div><b data-i18n="s3.bstat2t">100% Privacy</b><span data-i18n="s3.bstat2s">Your data is safe</span></div></div>
         <div class="st"><span class="ic"><svg class="icon"><use href="#i-shield"></use></svg></span><div><b data-i18n="s3.bstat3t">Secure Platform</b><span data-i18n="s3.bstat3s">Trusted by thousands</span></div></div>
         <div class="st"><span class="ic"><svg class="icon icon-lg"><use href="#i-user"></use></svg></span><div><b data-i18n="s3.bstat4t">Expert Support</b><span data-i18n="s3.bstat4s">We're here to help</span></div></div>
@@ -255,6 +262,7 @@
 
 <div class="toast" id="toast"></div>
 <script src="js/main.js?v=3"></script>
+<script src="js/side-nav.js?v=3"></script>
 <script src="js/dashboard.js?v=3"></script>
 </body>
 </html>

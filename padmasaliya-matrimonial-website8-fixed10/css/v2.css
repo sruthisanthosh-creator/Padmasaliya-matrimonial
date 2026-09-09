@@ -9,6 +9,83 @@
      JavaScript silently does nothing. */
   [hidden]{display:none !important;}
 
+  /* =====================================================================
+     COLLAPSIBLE SIDE NAVIGATION
+     The sidebar is eleven links tall. Docked on a laptop it eats a column
+     the results could use; stacked on a phone it pushed the profiles a full
+     screen down. So it is a drawer at every size: the button opens it, the
+     button closes it. On a laptop it slides the grid open beside the
+     content; on a phone it floats over the page with a scrim behind.
+     ===================================================================== */
+
+  .nav-toggle{
+    flex:none;width:42px;height:42px;border-radius:11px;
+    border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    cursor:pointer;padding:0;
+  }
+  .nav-toggle span{
+    display:block;width:18px;height:2px;border-radius:2px;background:#fff;
+    transition:transform .22s ease, opacity .18s ease;
+  }
+  .nav-toggle:hover{background:rgba(255,255,255,.16);}
+  .nav-toggle:focus-visible{outline:2px solid var(--gold-light);outline-offset:2px;}
+  /* open state folds the bars into an X */
+  body.nav-open .nav-toggle span:nth-child(1){transform:translateY(6px) rotate(45deg);}
+  body.nav-open .nav-toggle span:nth-child(2){opacity:0;}
+  body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
+
+  .nav-scrim{
+    position:fixed;inset:0;background:rgba(40,15,20,.5);z-index:45;
+    animation:navScrimIn .2s ease;
+  }
+  @keyframes navScrimIn{from{opacity:0;}to{opacity:1;}}
+
+  /* ---- laptop and desktop: the column is there or it is not ----
+     Animating grid-template-columns to zero leaves the item overflowing its
+     own track at full width, so closing simply removes the column and lets
+     the results take the space. Instant, and it cannot half-close. */
+  @media (min-width:1081px){
+    .s3-body{grid-template-columns:minmax(0,1fr) 300px;}
+    body.nav-open .s3-body{grid-template-columns:250px minmax(0,1fr) 300px;}
+    .s3-sidebar{display:none;}
+    body.nav-open .s3-sidebar{display:block;}
+    .nav-scrim{display:none;}
+  }
+
+  /* ---- tablet and phone: the drawer floats over the page ---- */
+  @media (max-width:1080px){
+    .s3-sidebar{
+      position:fixed;top:0;left:0;bottom:0;z-index:60;
+      width:min(280px,82vw);
+      transform:translateX(-102%);
+      transition:transform .26s cubic-bezier(.22,.61,.36,1);
+      overflow-y:auto;overscroll-behavior:contain;
+      border-radius:0;border-right:1px solid var(--line);
+      box-shadow:0 0 40px rgba(0,0,0,.18);
+      padding:18px;
+    }
+    body.nav-open .s3-sidebar{transform:translateX(0);}
+    /* inside the drawer the links read as a list again, not a tab strip */
+    .s3-sidebar .s3-nav-item{width:100%;justify-content:flex-start;}
+    /* the hamburger is behind the open drawer, so the drawer carries its own
+       way out — tapping the scrim works too, but it is not signposted */
+    .nav-close{
+      position:absolute;top:10px;right:10px;
+      width:38px;height:38px;border-radius:50%;
+      border:1px solid var(--line);background:#fff;color:var(--ink);
+      font-size:24px;line-height:1;cursor:pointer;
+    }
+    .nav-close:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  }
+  /* docked on a laptop, the drawer has the header's button and needs no X */
+  @media (min-width:1081px){ .nav-close{display:none;} }
+
+  @media (prefers-reduced-motion:reduce){
+    .s3-body,.s3-sidebar,.nav-toggle span{transition:none;}
+    .nav-scrim{animation:none;}
+  }
+
   /* ---------- Complete-profile gate ---------- */
   .gate-card{display:flex;gap:16px;align-items:flex-start;background:#fff;border:1px solid var(--line);
     border-left:4px solid var(--gold);border-radius:16px;padding:22px;margin:0 0 22px;box-shadow:var(--shadow);}
@@ -194,6 +271,34 @@
     font-size:12.5px;font-weight:600;color:var(--ink-soft);}
   .cp-chip.on{background:var(--maroon);border-color:var(--maroon);color:#fff;}
 
+  /* Helper line under a field — says what the list is for without turning
+     the label into a paragraph. */
+  .cp-hint{display:block;margin-top:6px;font-size:11.8px;color:var(--ink-soft);line-height:1.45;}
+  #rasiSuggest{color:var(--green);font-weight:600;}
+
+  /* "type your own interest" row */
+  .cp-addrow{display:flex;gap:8px;margin-top:12px;}
+  .cp-addrow input{
+    flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;
+    padding:10px 12px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink);
+  }
+  .cp-addrow button{
+    flex:none;border:1px solid var(--maroon);background:#fff;color:var(--maroon);
+    border-radius:9px;padding:10px 18px;font-weight:700;font-size:13px;min-height:44px;
+  }
+  .cp-addrow button:hover{background:var(--maroon);color:#fff;}
+
+  /* A datalist input keeps the browser's dropdown arrow off, so mark it as
+     one that suggests — otherwise it looks like a plain text box. */
+  input[list]{
+    background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),
+                     linear-gradient(135deg,var(--gold) 50%,transparent 50%);
+    background-position:calc(100% - 16px) calc(50% + 2px),calc(100% - 11px) calc(50% + 2px);
+    background-size:5px 5px,5px 5px;
+    background-repeat:no-repeat;
+    padding-right:32px !important;
+  }
+
   @media (max-width:1024px){
     .s3-morefilters{grid-template-columns:1fr 1fr;}
     .pm-rows{grid-template-columns:1fr;}
@@ -231,54 +336,56 @@
   .s3-body > *{min-width:0;}
   .s3-main,.s3-right,.s3-sidebar{min-width:0;}
 
+  /* Below 1080px the base stylesheet already drops .s3-body to one column and
+     the drawer above lifts the sidebar out of the flow entirely, so the main
+     column simply takes the full width. */
   @media (max-width:1080px){
-    .s3-body{padding:0 0 40px;gap:0;}
-    .s3-sidebar{
-      position:sticky;top:0;z-index:40;max-width:100%;
-      display:flex;gap:8px;align-items:center;
-      overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;scrollbar-width:none;
-      background:#fff;border:none;border-bottom:1px solid var(--line);
-      border-radius:0;padding:10px 16px;margin:0;
-      box-shadow:0 2px 8px rgba(90,20,30,.05);
-    }
-    .s3-sidebar::-webkit-scrollbar{display:none;}
-    .s3-side-user,
-    .s3-trust-box{display:none;}
-    .s3-nav-item{
-      flex:0 0 auto;white-space:nowrap;margin:0;
-      min-height:44px;                     /* comfortable tap target */
-      padding:10px 15px;border-radius:22px;font-size:13px;
-      background:var(--cream);border:1px solid var(--line);
-    }
-    .s3-nav-item.active{background:var(--maroon);color:#fff;border-color:var(--maroon);}
-    .s3-nav-item.active .icon{color:#fff;}
-    .s3-nav-item .count{margin-left:6px;}
-    .s3-nav-item .soon{margin-left:5px;}
-
+    .s3-body{padding:0 0 40px;gap:0;grid-template-columns:1fr;}
     .s3-main{padding:20px 16px 0;}
     .s3-right{padding:0 16px;}
     .s3-right .panel{margin-bottom:14px;}
+    .s3-nav-item{min-height:44px;}     /* comfortable tap target */
   }
 
-  @media (max-width:900px){
-    /* ---- home page: the firewall divider ----
-       The base stylesheet rotates this column 90deg and counter-rotates its
-       children, which is fine as a slim divider between two desktop columns
-       but overlaps into unreadable text once the grid stacks on a phone.
-       Below 900px it is just a card like the two around it. */
+  /* ---- home page: the firewall divider ----
+     The base stylesheet rotates this column 90deg and counter-rotates its
+     children — fine as a slim divider between two desktop columns, but the
+     moment the portal grid stacks (which it does at 1080px, not 900px) the
+     rotated text overlaps into an unreadable smear. This has to undo the
+     rotation at the SAME width the grid stacks at, or an iPad lands in the
+     gap between the two rules and shows the broken version. */
+  @media (max-width:1080px){
     .firewall-col,
     .firewall-col *{transform:none !important;}
     .firewall-col{
-      margin:4px auto;padding:18px;max-width:420px;
+      margin:4px auto;padding:18px;max-width:460px;
       background:var(--cream-2);border:1px dashed var(--gold-light);border-radius:14px;
     }
     .firewall-col .shield{width:56px;height:56px;margin-bottom:10px;}
     /* the heading carries a <br>, so leave it in — hiding it would run
        ZERO-KNOWLEDGE and FIREWALL together into one word */
-    .firewall-col b{font-size:12px;line-height:1.6;}
+    .firewall-col b{font-size:12.5px;line-height:1.6;}
     .firewall-col p{max-width:none;font-size:12.5px;}
 
+    /* ---- home page hero on a tablet ----
+       .s2-hero-text is capped at 480px and each badge at 150px, so three
+       badges plus their gaps need 510px and wrap into a ragged narrow
+       column over the photograph. Widen the text block and lay the badges
+       out on a grid so they stay even however many fit. */
+    .s2-hero-inner{padding:56px 32px;}
+    .s2-hero-text{
+      max-width:min(620px,72%);
+      background:rgba(253,249,241,.82);border-radius:16px;padding:22px 24px;
+    }
+    .s2-badges{
+      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px 18px;margin-top:24px;
+    }
+    .s2-badge{max-width:none;}
+    .s2-badge b{font-size:13px;}
+  }
+
+  @media (max-width:900px){
     /* ---- home page: general ---- */
     .s2-hero h1{font-size:30px;}
     .s2-portal-grid{gap:16px;}
@@ -303,9 +410,6 @@
     .s3-user > div{display:none;}       /* name repeats in the tab strip */
     .lang-dd-btn{padding:7px 10px;font-size:12.5px;}
     .lang-dd-btn .icon-sm{display:none;}
-
-    /* the tab strip sits under the sticky header on a phone */
-    .s3-sidebar{top:56px;padding:10px 14px;}
 
     /* ---- main column ---- */
     .s3-main{padding:18px 14px 0;}

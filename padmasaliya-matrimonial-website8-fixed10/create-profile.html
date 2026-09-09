@@ -80,6 +80,10 @@
 
 <section class="screen active">
   <div class="s3-topbar">
+    <button type="button" class="nav-toggle" id="navToggle"
+            aria-label="Menu" aria-expanded="false" aria-controls="sideNav">
+      <span></span><span></span><span></span>
+    </button>
     <a href="home.html" class="brand-mark" style="text-decoration:none;color:inherit;">
       <img src="assets/img/logo-icon.png" alt="Padmasaliya Matrimonial" width="42" height="34" style="object-fit:contain;">
       <div class="brand-name"><b data-i18n="brand.name" style="font-size:15px;">PADMASALIYA MATRIMONIAL</b><div class="brand-tagline" data-i18n="brand.tagline">Rooted in Tradition, United by Values</div></div>
@@ -106,7 +110,10 @@
 
 
   <div class="s3-body">
-    <aside class="s3-sidebar">
+    <div class="nav-scrim" id="navScrim" hidden></div>
+    <aside class="s3-sidebar" id="sideNav">
+      <button type="button" class="nav-close" id="navClose"
+              aria-label="Close menu">&times;</button>
       <!-- Name, plan and counts are filled in from the signed-in account by
            create-profile.js. Nothing here is a placeholder number: a brand new
            account sees no counts at all until it actually has something. -->
@@ -163,7 +170,12 @@
               <div class="s3-field"><label data-i18n="cp.fullName">Full Name <span class="cp-req">*</span></label><input id="f_fullName" type="text" required placeholder="Enter full name"></div>
               <div class="s3-field"><label data-i18n="cp.dob">Date of Birth <span class="cp-req">*</span></label><input id="f_dob" type="date" required></div>
               <div class="s3-field"><label data-i18n="cp.height">Height</label><input id="f_height" type="text" placeholder="e.g. 5'9&quot;"></div>
-              <div class="s3-field"><label data-i18n="cp.nativePlace">Native Place <span class="cp-req">*</span></label><input id="f_nativePlace" type="text" required placeholder="City, State"></div>
+              <div class="s3-field"><label data-i18n="cp.city">City / Town <span class="cp-req">*</span></label>
+                <input id="f_city" type="text" required list="dl_city" autocomplete="off" placeholder="Start typing…"></div>
+              <div class="s3-field"><label data-i18n="cp.state">State</label>
+                <input id="f_state" type="text" list="dl_state" autocomplete="off" placeholder="Start typing…"></div>
+              <div class="s3-field"><label data-i18n="cp.country">Country</label>
+                <input id="f_country" type="text" list="dl_country" autocomplete="off" placeholder="India"></div>
               <div class="s3-field"><label data-i18n="cp.contact">Contact Number <span class="cp-req">*</span></label><input id="f_contact" type="tel" required inputmode="numeric" placeholder="10-digit mobile"></div>
               <div class="s3-field"><label data-i18n="cp.maritalStatus">Marital Status</label>
                 <select id="f_marital">
@@ -183,15 +195,15 @@
             <h3 data-i18n="cp.sectionHoro">Gotram &amp; Horoscope</h3>
             <div class="cp-grid">
               <div class="s3-field"><label data-i18n="s3.filterGotram">Gotram <span class="cp-req">*</span></label>
-                <select id="f_gotram" required>
-                  <option value="">-- Select --</option>
-                  <option>Markandeya</option><option>Padmarishi</option><option>Kashyapa</option><option>Vasishta</option>
-                  <option>Bharadwaja</option><option>Gautama</option><option>Atri</option><option>Vishwamitra</option>
-                  <option>Jamadagni</option><option>Agastya</option><option>Sandilya</option><option>Kaundinya</option>
-                </select>
+                <input id="f_gotram" type="text" required list="dl_gotram" autocomplete="off" placeholder="Start typing…">
+                <span class="cp-hint" data-i18n="cp.listHint">Pick from the list, or type your own if it is not there.</span>
               </div>
-              <div class="s3-field"><label data-i18n="cp.nakshatra">Nakshatra</label><input id="f_nakshatra" type="text" placeholder="e.g. Uttara Ashadha"></div>
-              <div class="s3-field"><label data-i18n="cp.rasi">Rasi</label><input id="f_rasi" type="text" placeholder="e.g. Makara Rasi"></div>
+              <div class="s3-field"><label data-i18n="cp.nakshatra">Nakshatra</label>
+                <input id="f_nakshatra" type="text" list="dl_nakshatra" autocomplete="off" placeholder="e.g. Uttara Ashadha"></div>
+              <div class="s3-field"><label data-i18n="cp.rasi">Rasi</label>
+                <input id="f_rasi" type="text" list="dl_rasi" autocomplete="off" placeholder="e.g. Makara (Capricorn)">
+                <span class="cp-hint" id="rasiSuggest" hidden></span>
+              </div>
               <div class="s3-field"><label data-i18n="cp.gunas">Horoscope Gunas</label><input id="f_gunas" type="text" placeholder="e.g. 8.5"></div>
             </div>
           </div>
@@ -199,10 +211,13 @@
           <div class="cp-section reveal d2">
             <h3 data-i18n="cp.sectionCareer">Education &amp; Career</h3>
             <div class="cp-grid">
-              <div class="s3-field"><label data-i18n="cp.education">Education</label><input id="f_education" type="text" placeholder="e.g. B.Tech Computer Science"></div>
-              <div class="s3-field"><label data-i18n="s3.filterProfession">Profession <span class="cp-req">*</span></label><input id="f_profession" type="text" required placeholder="e.g. Software Engineer"></div>
+              <div class="s3-field"><label data-i18n="cp.education">Education</label>
+                <input id="f_education" type="text" list="dl_education" autocomplete="off" placeholder="e.g. B.E / B.Tech"></div>
+              <div class="s3-field"><label data-i18n="s3.filterProfession">Profession <span class="cp-req">*</span></label>
+                <input id="f_profession" type="text" required list="dl_profession" autocomplete="off" placeholder="e.g. Software Engineer"></div>
               <div class="s3-field"><label data-i18n="cp.income">Annual Income (LPA)</label><input id="f_income" type="number" min="0" max="9999" step="0.5" placeholder="e.g. 18"></div>
-              <div class="s3-field"><label data-i18n="cp.workLocation">Work Location</label><input id="f_workLocation" type="text" placeholder="City, State"></div>
+              <div class="s3-field"><label data-i18n="cp.workLocation">Work Location</label>
+                <input id="f_workLocation" type="text" list="dl_city" autocomplete="off" placeholder="City"></div>
             </div>
           </div>
 
@@ -216,7 +231,22 @@
             <div class="s3-field" style="margin-top:14px;">
               <label data-i18n="cp.interests">Interests (optional)</label>
               <div class="cp-chiprow" id="cpInterests"></div>
+              <div class="cp-addrow">
+                <input id="f_interestAdd" type="text" list="dl_interest" autocomplete="off"
+                       maxlength="30" placeholder="Add your own — e.g. Veena, Kolam">
+                <button type="button" id="addInterestBtn" data-i18n="cp.add">Add</button>
+              </div>
             </div>
+          </div>
+
+          <div class="cp-section reveal d3">
+            <h3 data-i18n="cp.sectionJathagam">Jathagam / Horoscope</h3>
+            <div class="cp-photo-upload" id="jathagamBox">
+              <svg class="icon icon-lg" style="color:var(--gold);"><use href="#i-ticket"></use></svg>
+              <p data-i18n="cp.jathagamHint">Upload the jathagam as a PDF or a clear photo (max 5MB). Shown only to Premium members and to families whose interest you accept.</p>
+              <button type="button" class="btn-outline-wide" id="chooseJathagamBtn" data-i18n="cp.chooseFile">Choose File</button>
+            </div>
+            <input type="file" id="jathagamInput" accept="application/pdf,image/png,image/jpeg,image/webp" hidden>
           </div>
 
           <div class="cp-section reveal d3">
@@ -255,8 +285,22 @@
 
   </div>
 </section>
+<!-- Suggestion lists for the form above. A datalist suggests without
+     restricting: the parent can always type something not on the list. -->
+<datalist id="dl_city"></datalist>
+<datalist id="dl_state"></datalist>
+<datalist id="dl_country"></datalist>
+<datalist id="dl_gotram"></datalist>
+<datalist id="dl_nakshatra"></datalist>
+<datalist id="dl_rasi"></datalist>
+<datalist id="dl_education"></datalist>
+<datalist id="dl_profession"></datalist>
+<datalist id="dl_interest"></datalist>
+
 <div class="toast" id="toast"></div>
+<script src="js/reference-data.js?v=3"></script>
 <script src="js/main.js?v=3"></script>
+<script src="js/side-nav.js?v=3"></script>
 <script src="js/create-profile.js?v=3"></script>
 </body>
 </html>

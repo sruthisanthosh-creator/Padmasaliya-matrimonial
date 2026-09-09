@@ -30,7 +30,9 @@
     fullName:     $('f_fullName'),
     dob:          $('f_dob'),
     height:       $('f_height'),
-    nativePlace:  $('f_nativePlace'),
+    city:         $('f_city'),
+    state:        $('f_state'),
+    country:      $('f_country'),
     contact:      $('f_contact'),
     marital:      $('f_marital'),
     gotram:       $('f_gotram'),
@@ -45,7 +47,9 @@
   };
 
   let pickedFile = null;
+  let pickedJathagam = null;
   let existingPhotoPath = null;
+  let existingJathagamPath = null;
   let removePhoto = false;      // they had a photo and chose to take it off
   let currentStatus = 'draft';
   let hasProfile = false;
@@ -111,17 +115,56 @@
     });
   });
 
-  // ---------- interests ----------
-  const INTEREST_LIST = [
-    'Music', 'Cooking', 'Reading', 'Travel', 'Temple visits', 'Classical dance',
-    'Cricket', 'Gardening', 'Photography', 'Movies', 'Yoga', 'Volunteering'
-  ];
+  // ---------- suggestion lists ----------
+  // Every list below suggests without restricting — a parent whose gotram or
+  // village is not in our list can still type it and save.
+  (function fillDatalists() {
+    if (typeof REF === 'undefined') return;
+    REF.fillList('dl_city',       REF.CITY);
+    REF.fillList('dl_state',      REF.STATE);
+    REF.fillList('dl_country',    REF.COUNTRY);
+    REF.fillList('dl_gotram',     REF.GOTRAM);
+    REF.fillList('dl_nakshatra',  REF.NAKSHATRA);
+    REF.fillList('dl_rasi',       REF.RASI);
+    REF.fillList('dl_education',  REF.EDUCATION);
+    REF.fillList('dl_profession', REF.PROFESSION);
+    REF.fillList('dl_interest',   REF.INTEREST);
+  })();
 
+  // Picking a nakshatra offers the rasi it usually falls in. It fills an empty
+  // Rasi box and otherwise only suggests — a jathagam can disagree with the
+  // general rule and the family's own copy wins.
+  const rasiHint = $('rasiSuggest');
+  if (F.nakshatra && typeof REF !== 'undefined') {
+    F.nakshatra.addEventListener('change', () => {
+      const rasi = REF.rasiForNakshatra(val(F.nakshatra));
+      if (!rasi || !rasiHint) { if (rasiHint) rasiHint.hidden = true; return; }
+      if (!val(F.rasi)) {
+        F.rasi.value = rasi;
+        updateMeter();
+        rasiHint.hidden = false;
+        rasiHint.textContent = t('Filled from your nakshatra — change it if your jathagam says otherwise.',
+          'நட்சத்திரத்திலிருந்து நிரப்பப்பட்டது — ஜாதகம் வேறு சொன்னால் மாற்றவும்.',
+          'నక్షత్రం నుండి నింపబడింది — జాతకం వేరుగా ఉంటే మార్చండి.');
+      } else if (val(F.rasi) !== rasi) {
+        rasiHint.hidden = false;
+        rasiHint.textContent = t('Usually ', 'பொதுவாக ', 'సాధారణంగా ') + rasi +
+          t(' — keeping what you entered.', ' — நீங்கள் இட்டதே வைக்கிறோம்.', ' — మీరు ఇచ్చినదే ఉంచుతున్నాము.');
+      } else {
+        rasiHint.hidden = true;
+      }
+    });
+  }
+
+  // ---------- interests ----------
   function renderChips() {
     if (!chipRow) return;
-    chipRow.innerHTML = INTEREST_LIST.map((i) =>
+    const base = (typeof REF !== 'undefined') ? REF.INTEREST : [];
+    // anything the parent typed themselves shows alongside the suggestions
+    const all = base.concat([...chosenInterests].filter((i) => base.indexOf(i) === -1));
+    chipRow.innerHTML = all.map((i) =>
       '<button type="button" class="cp-chip' + (chosenInterests.has(i) ? ' on' : '') +
-      '" data-interest="' + i + '">' + i + '</button>').join('');
+      '" data-interest="' + i.replace(/"/g, '&quot;') + '">' + i + '</button>').join('');
   }
 
   if (chipRow) {
@@ -134,16 +177,44 @@
     });
   }
 
+  const interestAdd = $('f_interestAdd');
+  const addInterestBtn = $('addInterestBtn');
+  function addInterest() {
+    const v = val(interestAdd);
+    if (!v) return;
+    if (chosenInterests.size >= 15) {
+      showToast(t('That is enough interests for one profile.',
+        'இது போதும்.', 'ఇది సరిపోతుంది.'));
+      return;
+    }
+    chosenInterests.add(v);
+    interestAdd.value = '';
+    renderChips();
+  }
+  if (addInterestBtn) addInterestBtn.addEventListener('click', addInterest);
+  if (interestAdd) {
+    interestAdd.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addInterest(); }
+    });
+  }
+
   // ---------- completeness meter ----------
   // Same six fields, same order, as the is_complete column in the database.
   const REQUIRED = [
-    ['fullName',    () => val(F.fullName).length > 1,    () => t('Full name', 'முழு பெயர்', 'పూర్తి పేరు')],
-    ['dob',         () => !!val(F.dob),                  () => t('Date of birth', 'பிறந்த தேதி', 'పుట్టిన తేదీ')],
-    ['gotram',      () => !!val(F.gotram),               () => t('Gotram', 'கோத்திரம்', 'గోత్రం')],
-    ['nativePlace', () => !!val(F.nativePlace),          () => t('Native place', 'சொந்த ஊர்', 'స్వస్థలం')],
-    ['profession',  () => !!val(F.profession),           () => t('Profession', 'தொழில்', 'వృత్తి')],
-    ['contact',     () => digits(val(F.contact)).length >= 6, () => t('Contact number', 'தொடர்பு எண்', 'సంప్రదింపు నంబర్')]
+    ['fullName',   () => val(F.fullName).length > 1,    () => t('Full name', 'முழு பெயர்', 'పూర్తి పేరు')],
+    ['dob',        () => !!val(F.dob),                  () => t('Date of birth', 'பிறந்த தேதி', 'పుట్టిన తేదీ')],
+    ['gotram',     () => !!val(F.gotram),               () => t('Gotram', 'கோத்திரம்', 'గోత్రం')],
+    ['city',       () => !!val(F.city),                 () => t('City / town', 'ஊர்', 'ఊరు')],
+    ['profession', () => !!val(F.profession),           () => t('Profession', 'தொழில்', 'వృత్తి')],
+    ['contact',    () => digits(val(F.contact)).length >= 6, () => t('Contact number', 'தொடர்பு எண்', 'సంప్రదింపు నంబర్')]
   ];
+
+  // The database keeps one native_place string (search and every card read
+  // it), so the three boxes are joined back into one on save and split apart
+  // again on load.
+  function composePlace() {
+    return [val(F.city), val(F.state), val(F.country)].filter(Boolean).join(', ');
+  }
 
   const digits = (s) => String(s || '').replace(/[^0-9]/g, '');
 
@@ -225,6 +296,50 @@
 
   // A photo is optional, so it also has to be undoable — otherwise picking
   // one by mistake would be permanent.
+  // ---------- jathagam (horoscope) ----------
+  const JATHAGAM_MAX = 5 * 1024 * 1024;
+  const jathagamInput = $('jathagamInput');
+  const jathagamBox = $('jathagamBox');
+
+  function bindChooseJathagam() {
+    const btn = $('chooseJathagamBtn');
+    if (btn && jathagamInput) btn.addEventListener('click', () => jathagamInput.click());
+  }
+  bindChooseJathagam();
+
+  if (jathagamInput) {
+    jathagamInput.addEventListener('change', () => {
+      const f = jathagamInput.files[0];
+      if (!f) return;
+      if (!/^(application\/pdf|image\/(jpe?g|png|webp))$/i.test(f.type)) {
+        showToast(t('Upload the jathagam as a PDF or an image (JPG, PNG, WEBP).',
+          'ஜாதகத்தை PDF அல்லது படமாக பதிவேற்றவும்.',
+          'జాతకాన్ని PDF లేదా చిత్రంగా అప్‌లోడ్ చేయండి.'));
+        jathagamInput.value = '';
+        return;
+      }
+      if (f.size > JATHAGAM_MAX) {
+        showToast(t('That file is ' + (f.size / 1048576).toFixed(1) + 'MB — the limit is 5MB.',
+          'கோப்பு 5MB க்கு மேல்.', 'ఫైల్ 5MB కంటే పెద్దది.'));
+        jathagamInput.value = '';
+        return;
+      }
+      pickedJathagam = f;
+      renderJathagam(f.name, (f.size / 1048576).toFixed(1) + 'MB');
+    });
+  }
+
+  function renderJathagam(name, size) {
+    if (!jathagamBox) return;
+    jathagamBox.innerHTML =
+      '<svg class="icon icon-lg" style="color:var(--green);"><use href="#i-shield-check"></use></svg>' +
+      '<p><b>' + String(name).replace(/</g, '&lt;').slice(0, 48) + '</b>' +
+      (size ? ' &middot; ' + size : '') + '</p>' +
+      '<button type="button" class="btn-outline-wide" id="chooseJathagamBtn">' +
+      t('Change file', 'கோப்பை மாற்று', 'ఫైల్ మార్చు') + '</button>';
+    bindChooseJathagam();
+  }
+
   function renderPhotoPreview(url) {
     if (!photoBox) return;
     photoBox.innerHTML =
@@ -293,7 +408,18 @@
     F.fullName.value     = existing.full_name || '';
     F.dob.value          = existing.dob || '';
     F.height.value       = existing.height || '';
-    F.nativePlace.value  = existing.native_place || '';
+    // New profiles store city/state/country separately; older ones only have
+    // the single native_place string, so split that back into the boxes.
+    if (existing.city || existing.state || existing.country) {
+      F.city.value    = existing.city || '';
+      F.state.value   = existing.state || '';
+      F.country.value = existing.country || '';
+    } else {
+      const parts = String(existing.native_place || '').split(',').map((s) => s.trim());
+      F.city.value    = parts[0] || '';
+      F.state.value   = parts[1] || '';
+      F.country.value = parts[2] || '';
+    }
     if (F.contact)  F.contact.value  = existing.contact_phone || '';
     if (F.marital)  F.marital.value  = existing.marital_status || '';
     if (F.gotram)   F.gotram.value   = existing.gotram || '';
@@ -308,6 +434,11 @@
 
     (existing.interests || []).forEach((i) => chosenInterests.add(i));
     renderChips();
+
+    existingJathagamPath = existing.jathagam_path || null;
+    if (existingJathagamPath) {
+      renderJathagam(existingJathagamPath.split('/').pop(), '');
+    }
 
     if (existingPhotoPath) {
       try {
@@ -352,8 +483,9 @@
     if (!session) { window.location.href = 'login.html'; return; }
     const userId = session.user.id;
 
-    // ---- photo goes to the PRIVATE bucket; we keep only the path ----
+    // ---- photo and jathagam go to the PRIVATE bucket; we keep only paths ----
     let newPath = null;
+    let newJathagamPath = null;
     try {
       if (pickedFile) {
         const ext = (pickedFile.name.split('.').pop() || 'jpg').toLowerCase();
@@ -361,6 +493,13 @@
         const up = await supabaseClient.storage
           .from('profile-photos').upload(newPath, pickedFile, { upsert: true, cacheControl: '3600' });
         if (up.error) throw up.error;
+      }
+      if (pickedJathagam) {
+        const jext = (pickedJathagam.name.split('.').pop() || 'pdf').toLowerCase();
+        newJathagamPath = userId + '/jathagam-' + Date.now() + '.' + jext;
+        const jup = await supabaseClient.storage
+          .from('profile-photos').upload(newJathagamPath, pickedJathagam, { upsert: true, cacheControl: '3600' });
+        if (jup.error) throw jup.error;
       }
     } catch (err) {
       btn.textContent = original;
@@ -379,7 +518,10 @@
       full_name:       val(F.fullName),
       dob:             val(F.dob) || null,
       height:          val(F.height),
-      native_place:    val(F.nativePlace),
+      city:            val(F.city),
+      state:           val(F.state) || null,
+      country:         val(F.country) || null,
+      native_place:    composePlace(),
       contact_phone:   digits(val(F.contact)),
       marital_status:  val(F.marital) || null,
       gotram:          val(F.gotram),
@@ -399,7 +541,8 @@
     if (newPath) {
       profile.photo_path = newPath;
       profile.photo_url = null;   // v1 stored a public URL; the bucket is private now
-    } else if (removePhoto) {
+    }
+    if (newJathagamPath) profile.jathagam_path = newJathagamPath; else if (removePhoto) {
       profile.photo_path = null;
       profile.photo_url = null;
     }
@@ -421,8 +564,14 @@
       existingPhotoPath = null;
     }
     if (newPath) existingPhotoPath = newPath;
+    // Same for a replaced jathagam — don't leave the old copy behind.
+    if (newJathagamPath && existingJathagamPath && existingJathagamPath !== newJathagamPath) {
+      try { await supabaseClient.storage.from('profile-photos').remove([existingJathagamPath]); } catch (e) {}
+    }
+    if (newJathagamPath) existingJathagamPath = newJathagamPath;
     removePhoto = false;
     pickedFile = null;
+    pickedJathagam = null;
     hasProfile = true;
     currentStatus = profile.status;
 
@@ -452,8 +601,9 @@
       if (!answer) return;
       deleteBtn.disabled = true;
       try {
-        if (existingPhotoPath) {
-          try { await supabaseClient.storage.from('profile-photos').remove([existingPhotoPath]); } catch (e) {}
+        const files = [existingPhotoPath, existingJathagamPath].filter(Boolean);
+        if (files.length) {
+          try { await supabaseClient.storage.from('profile-photos').remove(files); } catch (e) {}
         }
         const { error } = await supabaseClient.rpc('delete_my_profile', {
           p_reason: answer.reason, p_details: answer.details

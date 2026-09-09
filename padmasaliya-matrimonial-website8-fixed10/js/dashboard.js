@@ -198,8 +198,7 @@
     return '' +
       '<div class="profile-card" data-id="' + esc(p.id) + '">' +
         '<div class="profile-photo' + (locked && !photo ? ' is-locked' : '') + '" data-act="open">' + photoInner +
-          '<span class="tag-idv">' + icon('shield-check') + ' ' +
-            t('Community verified', 'சமூக சரிபார்ப்பு', 'సమాజ ధృవీకరణ') + '</span>' + lockTag +
+          lockTag +
           '<span class="heart" data-act="interest" title="' + esc(heartTitle) + '" ' +
             'style="' + (sent ? 'color:#c0392b;' : '') + '">' +
             icon(sent ? 'heart-fill' : 'heart') + '</span>' +
@@ -843,6 +842,7 @@
 
   // ---------- profile modal ----------
   let openId = null;
+  let openProfileData = null;   // the row the sheet is showing
 
   function pmRow(label, value, locked) {
     return '<div class="pm-row' + (locked ? ' locked' : '') + '"><label>' + esc(label) +
@@ -859,6 +859,7 @@
     let p;
     try {
       p = await rpc('get_profile', { p_id: id });
+      openProfileData = p;
     } catch (e) {
       pmBody.innerHTML = '<div class="pm-pad"><h3>' +
         esc(t('Not available', 'கிடைக்கவில்லை', 'అందుబాటులో లేదు')) +
@@ -920,6 +921,16 @@
           pmRow(t('Contact', 'தொடர்பு', 'సంప్రదింపు'), p.contact_phone, locked) +
         '</div>' +
         (p.about && !locked ? '<p class="pm-sub">' + esc(p.about) + '</p>' : '') +
+        // The jathagam sits behind the same gate as the contact number.
+        (p.has_jathagam
+          ? (p.jathagam_path
+              ? '<p class="pm-sub"><button type="button" class="link-btn" data-pm="jathagam">' +
+                esc(t('Open the jathagam', 'ஜாதகத்தைத் திற', 'జాతకం తెరవండి')) + '</button></p>'
+              : '<p class="pm-sub">' + icon('lock') + ' ' +
+                esc(t('A jathagam is attached — it opens with Premium.',
+                      'ஜாதகம் உள்ளது — பிரீமியத்தில் திறக்கும்.',
+                      'జాతకం ఉంది — ప్రీమియంలో తెరుచుకుంటుంది.')) + '</p>')
+          : '') +
         '<div class="pm-actions">' +
           '<button data-pm="save"' + (p.saved ? ' data-on="1"' : '') + '>' + icon('bookmark') + ' ' +
             esc(p.saved ? t('Saved', 'சேமித்தது', 'సేవ్') : t('Save to Drafts', 'வரைவில் சேமி', 'డ్రాఫ్ట్')) + '</button>' +
@@ -972,6 +983,19 @@
 
       if (act === 'report') { $('pmReport').hidden = !$('pmReport').hidden; return; }
       if (act === 'recommend-soon') { showToast(soonMsg()); return; }
+
+      if (act === 'jathagam') {
+        btn.disabled = true;
+        try {
+          const path = openProfileData && openProfileData.jathagam_path;
+          const { data, error } = await supabaseClient.storage
+            .from('profile-photos').createSignedUrl(path, 600);
+          if (error || !data) throw (error || new Error('NOT_FOUND'));
+          window.open(data.signedUrl, '_blank', 'noopener');
+        } catch (err) { showToast(explain(err)); }
+        btn.disabled = false;
+        return;
+      }
 
       btn.disabled = true;
       try {
