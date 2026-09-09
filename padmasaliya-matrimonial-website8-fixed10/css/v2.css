@@ -48,8 +48,15 @@
     font-size:12.8px;color:var(--ink-soft);line-height:1.5;}
   .free-note > .icon{color:var(--gold);flex:none;}
   .free-note > span{flex:1;min-width:220px;}
+  /* WCAG 2.2 AA asks for 24x24 CSS px pointer targets. These read as small
+     text links, so the height comes from padding rather than a bigger font. */
   .link-btn{background:none;border:none;color:var(--maroon);font-weight:700;font-size:12.8px;
-    text-decoration:underline;padding:0;}
+    text-decoration:underline;padding:5px 2px;min-height:24px;}
+  .profile-body h4{padding:3px 0;min-height:24px;}
+  .s3-footer a,.s2-footer a,.s2-links a,.panel-head a{
+    display:inline-block;padding:5px 2px;min-height:24px;
+  }
+  .panel-head a{cursor:pointer;}
 
   /* ---------- Locked (premium) fields on a card ---------- */
   .locked-line{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
@@ -213,6 +220,47 @@
   .s3-nav-item .icon,
   .s3-nav-item .icon-lg{width:17px;height:17px;stroke-width:1.9;flex:none;}
 
+  /* The base stylesheet drops .s3-body to a single column at 1080px, but the
+     sidebar stays a tall vertical block — so on a tablet you still scroll past
+     every nav link to reach the results. The tab strip starts at the same
+     1080px the grid collapses at, so the two never disagree. */
+  /* A grid item defaults to min-width:auto, so the tab strip's wide contents
+     stretched its own track past the viewport and the whole page scrolled
+     sideways. min-width:0 lets the item stay viewport-width and scroll its
+     contents internally, which is what the strip is for. */
+  .s3-body > *{min-width:0;}
+  .s3-main,.s3-right,.s3-sidebar{min-width:0;}
+
+  @media (max-width:1080px){
+    .s3-body{padding:0 0 40px;gap:0;}
+    .s3-sidebar{
+      position:sticky;top:0;z-index:40;max-width:100%;
+      display:flex;gap:8px;align-items:center;
+      overflow-x:auto;overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;scrollbar-width:none;
+      background:#fff;border:none;border-bottom:1px solid var(--line);
+      border-radius:0;padding:10px 16px;margin:0;
+      box-shadow:0 2px 8px rgba(90,20,30,.05);
+    }
+    .s3-sidebar::-webkit-scrollbar{display:none;}
+    .s3-side-user,
+    .s3-trust-box{display:none;}
+    .s3-nav-item{
+      flex:0 0 auto;white-space:nowrap;margin:0;
+      min-height:44px;                     /* comfortable tap target */
+      padding:10px 15px;border-radius:22px;font-size:13px;
+      background:var(--cream);border:1px solid var(--line);
+    }
+    .s3-nav-item.active{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+    .s3-nav-item.active .icon{color:#fff;}
+    .s3-nav-item .count{margin-left:6px;}
+    .s3-nav-item .soon{margin-left:5px;}
+
+    .s3-main{padding:20px 16px 0;}
+    .s3-right{padding:0 16px;}
+    .s3-right .panel{margin-bottom:14px;}
+  }
+
   @media (max-width:900px){
     /* ---- home page: the firewall divider ----
        The base stylesheet rotates this column 90deg and counter-rotates its
@@ -256,36 +304,25 @@
     .lang-dd-btn{padding:7px 10px;font-size:12.5px;}
     .lang-dd-btn .icon-sm{display:none;}
 
-    /* ---- sidebar becomes a scrolling tab strip ---- */
-    .s3-body{padding:0 0 40px;gap:0;}
-    .s3-sidebar{
-      position:sticky;top:56px;z-index:40;
-      display:flex;gap:8px;align-items:center;
-      overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;scrollbar-width:none;
-      background:#fff;border:none;border-bottom:1px solid var(--line);
-      border-radius:0;padding:10px 14px;margin:0;
-      box-shadow:0 2px 8px rgba(90,20,30,.05);
-    }
-    .s3-sidebar::-webkit-scrollbar{display:none;}
-    .s3-side-user,
-    .s3-trust-box{display:none;}
-    .s3-nav-item{
-      flex:0 0 auto;white-space:nowrap;margin:0;
-      padding:9px 14px;border-radius:22px;font-size:13px;
-      background:var(--cream);border:1px solid var(--line);
-    }
-    .s3-nav-item.active{background:var(--maroon);color:#fff;border-color:var(--maroon);}
-    .s3-nav-item.active .icon{color:#fff;}
-    .s3-nav-item .count{margin-left:6px;}
-    .s3-nav-item .soon{margin-left:5px;}
+    /* the tab strip sits under the sticky header on a phone */
+    .s3-sidebar{top:56px;padding:10px 14px;}
 
     /* ---- main column ---- */
     .s3-main{padding:18px 14px 0;}
     .s3-main h1{font-size:26px;}
     .s3-main .sub{font-size:13px;}
     .s3-right{padding:0 14px;}
-    .s3-right .panel{margin-bottom:14px;}
+
+    /* Every tappable thing gets a comfortable target and real spacing
+       between neighbours — thumbs are not mouse pointers. */
+    .btn-ghost,.btn-solid,.btn-join,.btn-upgrade,
+    .s3-search-btn,.s3-more-filters,.redeem-row button,
+    .pm-actions button,.self-actions button,.self-actions a{min-height:44px;}
+    .profile-actions{gap:8px;}
+    .heart{width:40px !important;height:40px !important;}
+    .lang-dd-btn{min-height:40px;}
+    .s3-popular .chip{min-height:34px;display:inline-flex;align-items:center;}
+    .s3-bell{padding:6px;margin:-6px;}   /* grows the hit area, not the icon */
 
     /* ---- filters ---- */
     .s3-filters{padding:14px;gap:10px;}

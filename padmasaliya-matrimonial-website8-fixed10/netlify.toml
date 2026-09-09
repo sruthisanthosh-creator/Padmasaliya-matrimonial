@@ -30,12 +30,22 @@
   [headers.values]
     Cache-Control = "public, max-age=604800"
 
+# The stylesheet and script filenames never change, so a long max-age meant a
+# phone kept yesterday's CSS for a full day after a deploy — a fix could be
+# live on the server and still invisible to the person who reported it.
+# must-revalidate makes the browser ask every time; Netlify answers 304 when
+# nothing changed, so this stays fast but is never stale.
 [[headers]]
   for = "/css/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/js/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
