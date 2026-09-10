@@ -389,9 +389,15 @@
     renderChips();
     fillShell();
 
+    // A profile the family already deleted is archived, not erased. They
+    // asked for it to be gone, so the form starts blank rather than handing
+    // back the details they just removed. Saving reuses the same row and
+    // clears the archive flag.
     const { data: existing } = await supabaseClient
       .from('parent_profiles').select('*')
-      .eq('parent_user_id', session.user.id).maybeSingle();
+      .eq('parent_user_id', session.user.id)
+      .is('deleted_at', null)
+      .maybeSingle();
 
     if (!existing) {
       // Seed the contact box with whatever they signed in with, if it was a phone.
@@ -536,7 +542,11 @@
       about:           val(F.about) || null,
       interests:       [...chosenInterests],
       status:          publish ? 'published' : 'draft',
-      visible:         !!publish
+      visible:         !!publish,
+      // saving revives the row if it had been archived by a previous delete
+      deleted_at:      null,
+      deleted_reason:  null,
+      deleted_details: null
     };
     if (newPath) {
       profile.photo_path = newPath;
@@ -601,10 +611,9 @@
       if (!answer) return;
       deleteBtn.disabled = true;
       try {
-        const files = [existingPhotoPath, existingJathagamPath].filter(Boolean);
-        if (files.length) {
-          try { await supabaseClient.storage.from('profile-photos').remove(files); } catch (e) {}
-        }
+        // The photo and jathagam stay in storage. The profile is archived,
+        // not erased — it leaves the member site entirely but the committee
+        // keeps a copy, and a record with a missing photo is half a record.
         const { error } = await supabaseClient.rpc('delete_my_profile', {
           p_reason: answer.reason, p_details: answer.details
         });

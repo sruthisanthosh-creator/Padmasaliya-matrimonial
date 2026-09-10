@@ -812,10 +812,8 @@
         if (!answer) return;
         btn.disabled = true;
         try {
-          const path = status && status.profile && status.profile.photo_path;
-          if (path) {
-            try { await supabaseClient.storage.from('profile-photos').remove([path]); } catch (x) {}
-          }
+          // Files stay in storage: the profile is archived for the committee,
+          // not erased, and a record with a missing photo is half a record.
           await rpc('delete_my_profile', { p_reason: answer.reason, p_details: answer.details });
           showToast(t('Profile deleted.', 'நீக்கப்பட்டது.', 'తొలగించబడింది.'));
           await refreshStatus();

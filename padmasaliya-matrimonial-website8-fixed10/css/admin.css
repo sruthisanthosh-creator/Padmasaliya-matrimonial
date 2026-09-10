@@ -201,6 +201,45 @@
   .ad-gate-card h1{font-family:var(--font-display);font-size:26px;color:var(--maroon);margin:14px 0 8px;}
   .ad-gate-card p{font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 20px;}
 
+  /* ---------- the password lock ---------- */
+  .ad-lockfields{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  .ad-lockfields input{
+    width:100%;border:1px solid var(--ad-line);border-radius:9px;padding:11px 13px;
+    font-size:14px;font-family:inherit;background:#fff;color:var(--ink);
+  }
+  .ad-lockfields input:focus{outline:2px solid var(--gold-light);outline-offset:1px;}
+  .ad-gate-card .btn-primary{width:100%;}
+  .ad-lockerr{color:#b3261e;font-size:13px;font-weight:600;margin:0 0 12px;}
+  .ad-lockhint{font-size:11.5px;color:var(--ink-soft);margin:14px 0 0;line-height:1.5;}
+
+  /* ---------- profile photo in the table and editor ---------- */
+  .ad-thumb{
+    width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none;
+    background:var(--cream);border:1px solid var(--ad-line);
+  }
+  .ad-thumb-empty{
+    width:44px;height:44px;border-radius:8px;flex:none;background:var(--cream);
+    border:1px solid var(--ad-line);display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft);
+  }
+  .ad-thumb-empty .icon{width:20px;height:20px;}
+  .ad-namecell{display:flex;align-items:center;gap:11px;}
+  .ad-files{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
+  .ad-filelink{
+    display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+    color:var(--maroon);background:var(--cream);border:1px solid var(--ad-line);
+    border-radius:7px;padding:4px 9px;cursor:pointer;min-height:26px;
+  }
+  .ad-filelink:hover{background:#fff;}
+
+  /* archived rows read as past tense */
+  .ad-table tr.is-archived td{opacity:.62;}
+  .ad-pill.archived{background:#e8e2d6;color:#5b5148;}
+  .ad-archnote{
+    background:#faf6ee;border:1px dashed var(--ad-line);border-radius:9px;
+    padding:10px 12px;font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;line-height:1.55;
+  }
+
   /* ---------- responsive ---------- */
   @media (max-width:900px){
     .ad-burger{display:flex;}

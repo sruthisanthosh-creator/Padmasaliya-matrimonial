@@ -51,6 +51,7 @@
     <div class="ad-top-right">
       <a href="dashboard.html" class="ad-link">← Back to site</a>
       <span class="ad-who" id="adWho"></span>
+      <button type="button" class="ad-link" id="adLockBtn" title="Lock the panel">🔒 Lock</button>
       <button type="button" class="ad-link" id="adSignOut">Sign out</button>
     </div>
   </header>
@@ -69,6 +70,25 @@
       <div class="ad-loading">Loading…</div>
     </main>
   </div>
+</div>
+
+<!-- Second lock: the email login proves who you are, this proves it is you
+     sitting at the machine right now. The unlock lives in the database with
+     a two-hour expiry, so clearing it here changes nothing. -->
+<div class="ad-gate" id="adLock" hidden>
+  <form class="ad-gate-card" id="adLockForm">
+    <svg class="icon icon-lg"><use href="#i-shield"></use></svg>
+    <h1 id="adLockTitle">Admin password</h1>
+    <p id="adLockText">Enter the admin password to open the panel.</p>
+    <div class="ad-lockfields">
+      <input type="password" id="adCurrentPw" placeholder="Current password" autocomplete="current-password" hidden>
+      <input type="password" id="adPw" placeholder="Password" autocomplete="current-password" required>
+      <input type="password" id="adPw2" placeholder="Repeat the password" autocomplete="new-password" hidden>
+    </div>
+    <p class="ad-lockerr" id="adLockErr" hidden></p>
+    <button type="submit" class="btn-primary" id="adLockGo">Unlock</button>
+    <p class="ad-lockhint" id="adLockHint"></p>
+  </form>
 </div>
 
 <!-- Shown instead of the panel when the signed-in account is not an admin -->

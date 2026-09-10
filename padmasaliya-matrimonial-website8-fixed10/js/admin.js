@@ -50,6 +50,11 @@
 
   function explain(e) {
     const m = String((e && e.message) || e || '');
+    if (m.includes('ADMIN_LOCKED')) return 'The panel locked itself. Enter the admin password again.';
+    if (m.includes('WRONG_PASSWORD')) return 'That password is not right.';
+    if (m.includes('PASSWORD_TOO_SHORT')) return 'Use at least 8 characters.';
+    if (m.includes('LOCKED_OUT')) return 'Too many wrong tries. Wait 15 minutes and try again.';
+    if (m.includes('NO_PASSWORD_SET')) return 'No admin password has been set yet.';
     if (m.includes('NOT_ADMIN')) return 'This account is not an administrator.';
     if (m.includes('AUTH_REQUIRED')) return 'Please sign in again.';
     if (m.includes('LAST_ADMIN')) return 'You cannot remove the only administrator.';
@@ -67,6 +72,26 @@
   }
 
   function busy(html) { main.innerHTML = '<div class="ad-loading">' + (html || 'Loading…') + '</div>'; }
+
+  // Photos and jathagams live in a private bucket. Sign what we are about
+  // to show, in one batch, and keep the result for the session.
+  const fileCache = new Map();
+  async function signFiles(paths) {
+    const want = [...new Set(paths.filter((p) => p && !fileCache.has(p)))];
+    if (!want.length) return;
+    try {
+      const { data } = await supabaseClient.storage
+        .from('profile-photos').createSignedUrls(want, 3600);
+      (data || []).forEach((d) => { if (d && d.signedUrl) fileCache.set(d.path, d.signedUrl); });
+    } catch (e) { /* the panel works without thumbnails */ }
+  }
+  async function openFile(path) {
+    if (!path) return;
+    if (!fileCache.has(path)) await signFiles([path]);
+    const url = fileCache.get(path);
+    if (url) window.open(url, '_blank', 'noopener');
+    else toast('Could not open that file.');
+  }
 
   // =====================================================================
   //  OVERVIEW
@@ -188,10 +213,18 @@
   // =====================================================================
 
   function profileStatusPill(r) {
+    if (r.deleted_at) return '<span class="ad-pill archived">Archived</span>';
     if (!r.is_complete) return '<span class="ad-pill incomplete">Incomplete</span>';
     if (!r.visible) return '<span class="ad-pill hidden">Hidden</span>';
     if (r.status !== 'published') return '<span class="ad-pill draft">Draft</span>';
     return '<span class="ad-pill live">Live</span>';
+  }
+
+  function thumb(r) {
+    const url = r.photo_path && fileCache.get(r.photo_path);
+    return url
+      ? '<img class="ad-thumb" src="' + esc(url) + '" alt="" data-act="photo">'
+      : '<span class="ad-thumb-empty">' + icon('user') + '</span>';
   }
 
   async function viewProfiles() {
@@ -202,28 +235,40 @@
       p_limit: PAGE, p_offset: st.page * PAGE
     });
     st.total = res.total;
+    await signFiles(res.rows.map((r) => r.photo_path));
 
     const rows = res.rows.map((r) =>
-      '<tr data-id="' + esc(r.id) + '">' +
-        '<td><div class="ad-name">' + esc(r.full_name || '—') +
-          (r.is_demo ? ' <span class="ad-pill demo">Demo</span>' : '') + '</div>' +
+      '<tr data-id="' + esc(r.id) + '"' + (r.deleted_at ? ' class="is-archived"' : '') + '>' +
+        '<td><div class="ad-namecell">' + thumb(r) + '<div>' +
+          '<div class="ad-name">' + esc(r.full_name || '—') +
+            (r.is_demo ? ' <span class="ad-pill demo">Demo</span>' : '') + '</div>' +
           '<div class="ad-meta">' + esc(r.created_for === 'son' ? 'Groom' : 'Bride') +
-          (r.age ? ' · ' + r.age + ' yrs' : '') + (r.gotram ? ' · ' + esc(r.gotram) : '') + '</div></td>' +
+            (r.age ? ' · ' + r.age + ' yrs' : '') + (r.gotram ? ' · ' + esc(r.gotram) : '') + '</div>' +
+          (r.has_jathagam
+            ? '<div class="ad-files"><button type="button" class="ad-filelink" data-act="jathagam">' +
+              icon('ticket') + ' Jathagam</button></div>' : '') +
+        '</div></div></td>' +
         '<td>' + esc(r.native_place || '—') + '</td>' +
         '<td>' + esc(r.profession || '—') +
           (r.annual_income ? '<div class="ad-meta">' + esc(r.annual_income) + '</div>' : '') + '</td>' +
         '<td class="nowrap">' + esc(r.contact_phone || '—') + '</td>' +
         '<td class="nowrap">' + profileStatusPill(r) +
           (r.reports > 0 ? ' <span class="ad-pill hidden">' + r.reports + ' report' +
-            (r.reports > 1 ? 's' : '') + '</span>' : '') + '</td>' +
+            (r.reports > 1 ? 's' : '') + '</span>' : '') +
+          (r.deleted_at ? '<div class="ad-meta">' + date(r.deleted_at) +
+            (r.deleted_reason ? ' · ' + esc(r.deleted_reason) : '') + '</div>' : '') + '</td>' +
         '<td class="nowrap ad-meta">' + esc(r.owner_email || (r.is_demo ? 'demo row' : '—')) + '</td>' +
         '<td class="nowrap ad-meta">' + date(r.created_at) + '</td>' +
         '<td><div class="ad-rowactions">' +
-          '<button class="ad-icon-btn" data-act="edit" title="Edit">' + icon('edit') + '</button>' +
-          '<button class="ad-icon-btn" data-act="toggle" title="' +
-            (r.visible ? 'Hide from search' : 'Show in search') + '">' +
-            icon(r.visible ? 'eye' : 'eye-off') + '</button>' +
-          '<button class="ad-icon-btn danger" data-act="delete" title="Delete">' + icon('trash') + '</button>' +
+          (r.deleted_at
+            ? '<button class="ad-icon-btn" data-act="restore" title="Put back on the site">' +
+              icon('check') + '</button>'
+            : '<button class="ad-icon-btn" data-act="edit" title="Edit">' + icon('edit') + '</button>' +
+              '<button class="ad-icon-btn" data-act="toggle" title="' +
+                (r.visible ? 'Hide from search' : 'Show in search') + '">' +
+                icon(r.visible ? 'eye' : 'eye-off') + '</button>') +
+          '<button class="ad-icon-btn danger" data-act="delete" title="Erase permanently">' +
+            icon('trash') + '</button>' +
         '</div></td>' +
       '</tr>').join('');
 
@@ -234,13 +279,21 @@
       '</div>' +
       '<p class="ad-sub">' + num(st.total) + ' profile' + (st.total === 1 ? '' : 's') +
         '. Editing here writes straight to the database.</p>' +
+      (st.status === 'deleted'
+        ? '<div class="ad-archnote">These families deleted their own profile. It is gone from the ' +
+          'member site completely — out of search, shortlists and interest lists, and no member can ' +
+          'reach it. It is kept here for your records. <b>Put back</b> returns it to the site; ' +
+          '<b>Erase</b> removes it from the database for good.</div>'
+        : '') +
 
       '<div class="ad-tools">' +
         '<input type="search" id="adSearch" placeholder="Name, gotram, place, phone…" value="' + esc(st.search) + '">' +
         '<select id="adStatus">' +
-          ['', 'published', 'draft', 'hidden', 'incomplete', 'demo'].map((v) =>
+          [['', 'On the site'], ['published', 'Published'], ['draft', 'Draft'],
+           ['hidden', 'Hidden'], ['incomplete', 'Incomplete'], ['demo', 'Demo'],
+           ['deleted', 'Archived (deleted by owner)']].map(([v, l]) =>
             '<option value="' + v + '"' + (st.status === v ? ' selected' : '') + '>' +
-            (v === '' ? 'All statuses' : v[0].toUpperCase() + v.slice(1)) + '</option>').join('') +
+            l + '</option>').join('') +
         '</select>' +
         '<button class="ad-btn" id="adSearchBtn">' + icon('search') + ' Search</button>' +
         '<button class="ad-btn" id="adExport">' + icon('download') + ' Export CSV</button>' +
@@ -270,6 +323,15 @@
 
   async function profileAction(act, id, row) {
     if (act === 'edit') { openProfileEditor(row); return; }
+    if (act === 'photo') { openFile(row.photo_path); return; }
+    if (act === 'jathagam') { openFile(row.jathagam_path); return; }
+    if (act === 'restore') {
+      if (!confirm('Put "' + (row.full_name || 'this profile') + '" back on the site?\n\n' +
+        'It will be published and searchable again.')) return;
+      try { await rpc('admin_restore_profile', { p_id: id }); toast('Back on the site.'); viewProfiles(); }
+      catch (e) { toast(explain(e)); }
+      return;
+    }
     if (act === 'toggle') {
       try {
         await rpc('admin_set_visible', { p_id: id, p_visible: !row.visible });
@@ -279,11 +341,13 @@
       return;
     }
     if (act === 'delete') {
-      if (!confirm('Delete "' + (row.full_name || 'this profile') +
-        '" for good?\n\nEvery interest, shortlist entry and report attached to it goes too. This cannot be undone.')) return;
+      if (!confirm('Erase "' + (row.full_name || 'this profile') +
+        '" from the database for good?\n\nThis is not the same as the member deleting it — that keeps ' +
+        'a copy here for you. This removes the row entirely, along with every interest, shortlist ' +
+        'entry and report attached to it. It cannot be undone.')) return;
       try {
         await rpc('admin_delete_profile', { p_id: id });
-        toast('Profile deleted.');
+        toast('Erased permanently.');
         viewProfiles();
       } catch (e) { toast(explain(e)); }
     }
@@ -332,7 +396,19 @@
       return '<div class="' + (cls || '') + '"><label for="f_' + key + '">' + esc(label) + '</label>' + input + '</div>';
     };
 
-    modalBody.innerHTML =
+    const files = !row ? '' :
+      '<div class="ad-files" style="margin-bottom:16px;">' +
+        (row.has_photo
+          ? '<button type="button" class="ad-filelink" data-file="' + esc(row.photo_path) + '">' +
+            icon('eye') + ' Open photo</button>'
+          : '<span class="ad-meta">No photo uploaded</span>') +
+        (row.has_jathagam
+          ? '<button type="button" class="ad-filelink" data-file="' + esc(row.jathagam_path) + '">' +
+            icon('ticket') + ' Open jathagam</button>'
+          : '<span class="ad-meta">No jathagam uploaded</span>') +
+      '</div>';
+
+    modalBody.innerHTML = files +
       '<div class="ad-form">' + FIELDS.map(field).join('') +
         '<div class="full"><label for="f_interests">Interests (comma separated)</label>' +
         '<input id="f_interests" type="text" value="' +
@@ -353,6 +429,9 @@
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
 
+    modalBody.querySelectorAll('[data-file]').forEach((b) => {
+      b.onclick = () => openFile(b.dataset.file);
+    });
     $('adCancel').onclick = closeModal;
     if ($('adDel')) $('adDel').onclick = async () => {
       if (!confirm('Delete "' + (row.full_name || 'this profile') + '" for good?')) return;
@@ -685,6 +764,12 @@
     await supabaseClient.auth.signOut();
     window.location.href = 'home.html';
   };
+  // Locking clears the unlock in the DATABASE, so it locks every device at
+  // once — not just this browser tab.
+  $('adLockBtn').onclick = async () => {
+    try { await rpc('admin_lock'); } catch (e) {}
+    window.location.reload();
+  };
   document.addEventListener('click', (e) => {
     if (document.body.classList.contains('adnav-open') &&
         !e.target.closest('.ad-nav') && !e.target.closest('.ad-burger')) {
@@ -719,6 +804,64 @@
       return;
     }
 
+    // Second lock. The state lives in the database, so this is not a screen
+    // that can be clicked past — assert_admin() refuses while it is locked.
+    const lock = await rpc('admin_lock_state');
+    if (!lock.has_password || !lock.unlocked) { showLock(lock); return; }
+
+    await openPanel();
+  })();
+
+  function showLock(lock) {
+    const first = !lock.has_password;
+    $('adLock').hidden = false;
+    $('adLockTitle').textContent = first ? 'Choose an admin password' : 'Admin password';
+    $('adLockText').textContent = first
+      ? 'Your email login proves who you are. This second password protects the panel if a ' +
+        'signed-in laptop is ever left open. At least 8 characters.'
+      : 'Enter the admin password to open the panel.';
+    $('adPw').placeholder = first ? 'New password' : 'Password';
+    $('adPw').setAttribute('autocomplete', first ? 'new-password' : 'current-password');
+    $('adPw2').hidden = !first;
+    $('adPw2').required = first;
+    $('adLockGo').textContent = first ? 'Set password and open' : 'Unlock';
+    $('adLockHint').textContent = first
+      ? 'Write it down somewhere safe. If it is ever lost the owner can clear it from the Supabase SQL editor.'
+      : 'The panel stays unlocked for two hours, then asks again.';
+
+    if (lock.locked_out) {
+      $('adLockErr').hidden = false;
+      $('adLockErr').textContent = 'Too many wrong tries. Try again after ' +
+        new Date(lock.locked_until).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) + '.';
+    }
+
+    $('adLockForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = $('adLockGo');
+      const pw = $('adPw').value;
+      $('adLockErr').hidden = true;
+      if (first && pw !== $('adPw2').value) {
+        $('adLockErr').hidden = false;
+        $('adLockErr').textContent = 'The two passwords do not match.';
+        return;
+      }
+      btn.disabled = true;
+      try {
+        if (first) await rpc('admin_set_password', { p_new: pw, p_current: null });
+        else await rpc('admin_unlock', { p_password: pw });
+        $('adLock').hidden = true;
+        $('adPw').value = ''; $('adPw2').value = '';
+        await openPanel();
+      } catch (err) {
+        $('adLockErr').hidden = false;
+        $('adLockErr').textContent = explain(err);
+        btn.disabled = false;
+      }
+    };
+    $('adPw').focus();
+  }
+
+  async function openPanel() {
     shell.hidden = false;
     $('adWho').textContent = me.email || '';
     if (typeof REF !== 'undefined') {
@@ -734,5 +877,5 @@
       const h = (location.hash || '').replace('#', '');
       if (VIEWS[h] && h !== tab) go(h);
     });
-  })();
+  }
 })();
