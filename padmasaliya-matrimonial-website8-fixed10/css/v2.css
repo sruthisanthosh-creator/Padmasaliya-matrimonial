@@ -77,6 +77,9 @@
       font-size:24px;line-height:1;cursor:pointer;
     }
     .nav-close:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+    /* the close button sits over the first thing in the drawer, so the
+       name block keeps clear of it rather than running underneath */
+    .s3-side-user{padding-right:44px;}
   }
   /* docked on a laptop, the drawer has the header's button and needs no X */
   @media (min-width:1081px){ .nav-close{display:none;} }
@@ -85,6 +88,28 @@
     .s3-body,.s3-sidebar,.nav-toggle span{transition:none;}
     .nav-scrim{animation:none;}
   }
+
+  /* A long email has nowhere to break, and a flex child defaults to
+     min-width:auto — so the name block grew past the sidebar instead of
+     wrapping inside it. Let the box shrink, and let the address break. */
+  .s3-side-user{align-items:flex-start;}
+  .s3-side-user > div{min-width:0;flex:1;}
+  .s3-side-user .s3-avatar{flex:none;}
+  .s3-side-user b{
+    overflow-wrap:anywhere;word-break:break-word;line-height:1.35;
+  }
+  .s3-side-user span{overflow-wrap:anywhere;}
+  .s3-side-user .verified-chip{margin-top:5px;}
+
+  /* Same shape in the header, where the column is even tighter. There the
+     address is truncated rather than wrapped — the topbar is one line. */
+  .s3-user{min-width:0;}
+  .s3-user > div{min-width:0;}
+  .s3-user > div > b{
+    display:block;max-width:190px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .s3-user .s3-avatar{flex:none;}
 
   /* ---------- Complete-profile gate ---------- */
   .gate-card{display:flex;gap:16px;align-items:flex-start;background:#fff;border:1px solid var(--line);
