@@ -1,0 +1,11 @@
+# The parent .gitignore whitelists this whole folder, so anything dropped in
+# here would be committed. Secrets must never be among them.
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/functions/.env
+
+# local scratch
+_*.html
+_*.js

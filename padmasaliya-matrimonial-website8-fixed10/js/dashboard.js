@@ -726,51 +726,115 @@
     if (codeBtn) codeBtn.addEventListener('click', () => redeemCode('creditCode', codeBtn));
   }
 
-  // Razorpay is not wired up yet, so say so plainly rather than opening a
-  // checkout that cannot take money. The committee can still hand out codes.
+  // supabase-js reports a non-2xx from a function as an error, with the body
+  // tucked away on error.context. The code inside it is what tells a missing
+  // key apart from a genuine failure, so dig it out rather than showing
+  // "Edge Function returned a non-2xx status code" to a parent.
+  async function callFn(body) {
+    const { data, error } = await supabaseClient.functions.invoke('razorpay', { body });
+    if (!error) return { data: data, code: null };
+    let code = null;
+    try { code = (await error.context.json()).error; } catch (e) { /* not JSON */ }
+    return { data: null, code: code || 'FUNCTION_ERROR', error: error };
+  }
+
+  const CHECKOUT_MSG = {
+    RAZORPAY_NOT_CONFIGURED: () => t(
+      'Card and UPI payment is being set up. For now, ask the committee for an activation code.',
+      'UPI/\u0b95\u0bbe\u0bb0\u0bcd\u0b9f\u0bcd \u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd \u0bb5\u0bb0\u0bc1\u0b95\u0bbf\u0bb1\u0ba4\u0bc1. \u0b87\u0baa\u0bcd\u0baa\u0bcb\u0ba4\u0bc8\u0b95\u0bcd\u0b95\u0bc1 \u0b95\u0bc1\u0bb4\u0bc1\u0bb5\u0bbf\u0b9f\u0bae\u0bcd \u0b95\u0bc1\u0bb1\u0bbf\u0baf\u0bc0\u0b9f\u0bcd\u0b9f\u0bc1 \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.',
+      '\u0c15\u0c3e\u0c30\u0c4d\u0c21\u0c41/UPI \u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c38\u0c3f\u0c26\u0c4d\u0c27\u0c02 \u0c05\u0c35\u0c41\u0c24\u0c4b\u0c02\u0c26\u0c3f. \u0c07\u0c2a\u0c4d\u0c2a\u0c1f\u0c3f\u0c15\u0c3f \u0c15\u0c2e\u0c3f\u0c1f\u0c40\u0c28\u0c3f \u0c15\u0c4b\u0c21\u0c4d \u0c05\u0c21\u0c17\u0c02\u0c21\u0c3f.'),
+    PACK_TOO_BIG: () => t(
+      'That pack is bigger than the number of families you have left to open.',
+      '\u0b87\u0ba8\u0bcd\u0ba4 \u0baa\u0bc7\u0b95\u0bcd \u0bae\u0bbf\u0b95\u0baa\u0bcd\u0baa\u0bc6\u0bb0\u0bbf\u0baf\u0ba4\u0bc1.',
+      '\u0c08 \u0c2a\u0c4d\u0c2f\u0c3e\u0c15\u0c4d \u0c1a\u0c3e\u0c32\u0c3e \u0c2a\u0c46\u0c26\u0c4d\u0c26\u0c26\u0c3f.'),
+    BAD_PACK: () => t('That pack is no longer available.',
+      '\u0b87\u0ba8\u0bcd\u0ba4 \u0baa\u0bc7\u0b95\u0bcd \u0b87\u0baa\u0bcd\u0baa\u0bcb\u0ba4\u0bc1 \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.',
+      '\u0c08 \u0c2a\u0c4d\u0c2f\u0c3e\u0c15\u0c4d \u0c07\u0c2a\u0c4d\u0c2a\u0c41\u0c21\u0c41 \u0c32\u0c47\u0c26\u0c41.'),
+    BAD_SIGNATURE: () => t(
+      'We could not confirm that payment. Nothing was added \u2014 if money left your account, send the committee the payment id and it will be sorted out.',
+      '\u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0ba4\u0bcd\u0ba4\u0bc8 \u0b89\u0bb1\u0bc1\u0ba4\u0bbf\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0ba4\u0bcd\u0ba4 \u0bae\u0bc1\u0b9f\u0bbf\u0baf\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8. \u0b95\u0bc1\u0bb4\u0bc1\u0bb5\u0bc8 \u0ba4\u0bca\u0b9f\u0bb0\u0bcd\u0baa\u0bc1 \u0b95\u0bca\u0bb3\u0bcd\u0bb3\u0bb5\u0bc1\u0bae\u0bcd.',
+      '\u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41\u0c28\u0c41 \u0c27\u0c43\u0c35\u0c40\u0c15\u0c30\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c15\u0c2a\u0c4b\u0c2f\u0c3e\u0c2e\u0c41. \u0c15\u0c2e\u0c3f\u0c1f\u0c40\u0c28\u0c3f \u0c38\u0c02\u0c2a\u0c4d\u0c30\u0c26\u0c3f\u0c02\u0c1a\u0c02\u0c21\u0c3f.')
+  };
+
   async function startCheckout(packId, btn) {
     const pack = (credits.packs || []).find((k) => k.id === packId);
     if (!pack) return;
-    if (typeof window.Razorpay === 'undefined' || !window.RZP_KEY) {
-      showToast(t('Card and UPI payment is being set up. For now, ask the committee for an activation code.',
-        'UPI/\u0b95\u0bbe\u0bb0\u0bcd\u0b9f\u0bcd \u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd \u0bb5\u0bb0\u0bc1\u0b95\u0bbf\u0bb1\u0ba4\u0bc1. \u0b87\u0baa\u0bcd\u0baa\u0bcb\u0ba4\u0bc9\u0b95\u0bcd\u0b95\u0bc1 \u0b95\u0bc1\u0bb4\u0bc1\u0bb5\u0bbf\u0b9f\u0bae\u0bcd \u0b95\u0bc1\u0bb1\u0bbf\u0baf\u0bc0\u0b9f\u0bcd\u0b9f\u0bc1 \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.',
-        '\u0c15\u0c3e\u0c30\u0c4d\u0c21\u0c41/UPI \u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c38\u0c3f\u0c26\u0c4d\u0c27\u0c02 \u0c05\u0c35\u0c41\u0c24\u0c4b\u0c02\u0c26\u0c3f. \u0c07\u0c2a\u0c4d\u0c2a\u0c1f\u0c3f\u0c15\u0c3f \u0c15\u0c2e\u0c3f\u0c1f\u0c40\u0c28\u0c3f \u0c15\u0c4b\u0c21\u0c4d \u0c05\u0c21\u0c17\u0c02\u0c21\u0c3f.'));
+
+    // The checkout script comes from Razorpay's CDN; a blocked network or an
+    // ad blocker is the usual reason it is missing.
+    if (typeof window.Razorpay === 'undefined') {
+      showToast(t('The payment window could not load. Check your connection and try again.',
+        '\u0b95\u0b9f\u0bcd\u0b9f\u0ba3 \u0b9a\u0bbe\u0bb3\u0bb0\u0bae\u0bcd \u0ba4\u0bbf\u0bb1\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.',
+        '\u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c35\u0c3f\u0c02\u0c21\u0c4b \u0c24\u0c46\u0c30\u0c35\u0c32\u0c47\u0c26\u0c41.'));
       return;
     }
+
     btn.disabled = true;
-    try {
-      const { data: order, error: oErr } = await supabaseClient.functions
-        .invoke('razorpay', { body: { action: 'create-order', pack_id: packId } });
-      if (oErr || !order || !order.razorpay_order_id) throw (oErr || new Error('ORDER_FAILED'));
-      const rz = new window.Razorpay({
-        key: window.RZP_KEY,
-        order_id: order.razorpay_order_id,
-        amount: pack.price_paise,
-        currency: 'INR',
-        name: 'Padmasaliya Matrimonial',
-        description: pack.credits + ' credits',
-        prefill: { email: (me && me.email) || '' },
-        theme: { color: '#7a1a2b' },
-        handler: async (r) => {
-          try {
-            const { error: vErr } = await supabaseClient.functions.invoke('razorpay', {
-              body: { action: 'verify',
-                      razorpay_order_id: r.razorpay_order_id,
-                      razorpay_payment_id: r.razorpay_payment_id,
-                      razorpay_signature: r.razorpay_signature }
-            });
-            if (vErr) throw vErr;
-            showToast(t(pack.credits + ' credits added.',
-              pack.credits + ' \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b9a\u0bc7\u0bb0\u0bcd\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1.',
-              pack.credits + ' \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d\u0c38\u0c4d \u0c1a\u0c47\u0c30\u0c3e\u0c2f\u0c3f.'));
-            await refreshCredits();
-            go('credits');
-          } catch (e) { showToast(explain(e)); }
-        },
-        modal: { ondismiss: () => { btn.disabled = false; } }
-      });
-      rz.open();
-    } catch (e) { showToast(explain(e)); btn.disabled = false; }
+    const done = () => { btn.disabled = false; };
+
+    const { data: order, code } = await callFn({ action: 'create-order', pack_id: packId });
+    if (!order || !order.razorpay_order_id) {
+      showToast((CHECKOUT_MSG[code] || (() => t('Could not start the payment. Please try again.',
+        '\u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0ba4\u0bcd\u0ba4\u0bc8\u0ba4\u0bcd \u0ba4\u0bca\u0b9f\u0b99\u0bcd\u0b95 \u0bae\u0bc1\u0b9f\u0bbf\u0baf\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.',
+        '\u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c2a\u0c4d\u0c30\u0c3e\u0c30\u0c02\u0c2d\u0c3f\u0c02\u0c1a\u0c32\u0c47\u0c15\u0c2a\u0c4b\u0c2f\u0c3e\u0c2e\u0c41.')))());
+      done();
+      return;
+    }
+
+    const rz = new window.Razorpay({
+      key: order.key_id,                 // publishable id, straight from the server
+      order_id: order.razorpay_order_id,
+      amount: order.amount,
+      currency: 'INR',
+      name: 'Padmasaliya Matrimonial',
+      description: pack.credits + ' credits',
+      image: location.origin + '/assets/img/logo-icon.png',
+      prefill: { email: (me && me.email) || '' },
+      theme: { color: '#7a1a2b' },
+      retry: { enabled: false },
+
+      handler: async (r) => {
+        // The webhook credits this too, so a failure here is not lost money —
+        // say that, rather than leaving them staring at an error.
+        const { data: ok, code: vCode } = await callFn({
+          action: 'verify',
+          razorpay_order_id: r.razorpay_order_id,
+          razorpay_payment_id: r.razorpay_payment_id,
+          razorpay_signature: r.razorpay_signature
+        });
+        if (!ok) {
+          showToast((CHECKOUT_MSG[vCode] || (() => t(
+            'Payment received. The credits are taking a moment to land \u2014 refresh in a minute.',
+            '\u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd \u0b95\u0bbf\u0b9f\u0bc8\u0ba4\u0bcd\u0ba4\u0ba4\u0bc1. \u0b92\u0bb0\u0bc1 \u0ba8\u0bbf\u0bae\u0bbf\u0b9f\u0ba4\u0bcd\u0ba4\u0bbf\u0bb2\u0bcd \u0bae\u0bc0\u0ba3\u0bcd\u0b9f\u0bc1\u0bae\u0bcd \u0baa\u0bbe\u0bb0\u0bcd\u0b95\u0bcd\u0b95\u0bb5\u0bc1\u0bae\u0bcd.',
+            '\u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c05\u0c02\u0c26\u0c3f\u0c02\u0c26\u0c3f. \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d\u0c38\u0c4d \u0c15\u0c4a\u0c26\u0c4d\u0c26\u0c3f\u0c38\u0c47\u0c2a\u0c1f\u0c4d\u0c32\u0c4b \u0c1a\u0c47\u0c30\u0c41\u0c24\u0c3e\u0c2f\u0c3f.')))());
+        } else {
+          showToast(t(pack.credits + ' credits added.',
+            pack.credits + ' \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b9a\u0bc7\u0bb0\u0bcd\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1.',
+            pack.credits + ' \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d\u0c38\u0c4d \u0c1a\u0c47\u0c30\u0c3e\u0c2f\u0c3f.'));
+        }
+        await refreshCredits();
+        go('credits');
+        done();
+      },
+
+      modal: {
+        // Closing the window is a normal thing to do, not an error.
+        ondismiss: () => { done(); }
+      }
+    });
+
+    rz.on('payment.failed', (resp) => {
+      const d = (resp && resp.error) || {};
+      console.error('razorpay payment failed', d);
+      showToast(t(
+        'Payment did not go through' + (d.description ? ': ' + d.description : '') +
+          '. Nothing was charged.',
+        '\u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd \u0ba8\u0b9f\u0b95\u0bcd\u0b95\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8. \u0baa\u0ba3\u0bae\u0bcd \u0b8e\u0b9f\u0bc1\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bb5\u0bbf\u0bb2\u0bcd\u0bb2\u0bc8.',
+        '\u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c2a\u0c42\u0c30\u0c4d\u0c24\u0c3f \u0c15\u0c3e\u0c32\u0c47\u0c26\u0c41. \u0c21\u0c2c\u0c4d\u0c2c\u0c41 \u0c24\u0c40\u0c38\u0c41\u0c15\u0c4b\u0c32\u0c47\u0c26\u0c41.'));
+      done();
+    });
+
+    rz.open();
   }
 
   async function redeemCode(inputId, btn) {

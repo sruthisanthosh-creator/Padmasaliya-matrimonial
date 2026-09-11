@@ -15,6 +15,12 @@
 //
 //  Deploy: Supabase Dashboard -> Edge Functions -> Deploy a new function
 //  Name it exactly "razorpay" and paste this file in.
+//
+//  Turn OFF "Verify JWT" for this function. Razorpay's webhook arrives with no
+//  user token, so the platform's own gate would reject it before this code ran.
+//  Nothing is lost by turning it off: every member-facing path below checks the
+//  token itself, and the webhook path is gated by its HMAC signature instead.
+//
 //  Then set these secrets (Edge Functions -> Manage secrets):
 //    RAZORPAY_KEY_ID       from the Razorpay dashboard
 //    RAZORPAY_KEY_SECRET   from the Razorpay dashboard
@@ -107,6 +113,13 @@ async function createOrder(userId: string, packId: string) {
     .from('credit_packs').select('*').eq('id', packId).eq('active', true).single();
   if (!pack) return json({ error: 'BAD_PACK' }, 400);
 
+  // Razorpay rejects anything under a rupee, and a zero-rupee pack would mean
+  // a misconfigured price row handing out free credits.
+  if (!Number.isInteger(pack.price_paise) || pack.price_paise < 100) {
+    console.error('pack has a bad price', pack.id, pack.price_paise);
+    return json({ error: 'BAD_AMOUNT' }, 400);
+  }
+
   // Nor may someone buy more credits than they have profiles to spend on.
   const { data: canCount } = await admin.rpc('unlockable_count', { uid: userId });
   if (typeof canCount === 'number' && pack.credits > canCount) {
@@ -161,6 +174,8 @@ async function verify(userId: string, body: Record<string, string>) {
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return json({ error: 'MISSING_FIELDS' }, 400);
   }
+
+  if (!KEY_SECRET) return json({ error: 'RAZORPAY_NOT_CONFIGURED' }, 503);
 
   const expected = await hmacHex(KEY_SECRET, `${razorpay_order_id}|${razorpay_payment_id}`);
   if (!safeEqual(expected, razorpay_signature)) {

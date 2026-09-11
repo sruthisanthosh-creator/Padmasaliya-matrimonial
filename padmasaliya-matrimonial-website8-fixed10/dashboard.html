@@ -266,11 +266,11 @@
 
 <div class="toast" id="toast"></div>
 <script src="js/main.js?v=3"></script>
-<!-- Razorpay checkout. RZP_KEY is the publishable Key ID and is safe in the
-     page; the Key Secret lives only in the Edge Function. Until the client
-     pastes their key below, the Buy buttons say so instead of failing. -->
+<!-- Razorpay checkout. The publishable Key ID is not written here: the
+     create-order call returns it, so the key has one home (the Edge Function's
+     secrets) and rotating it needs no site deploy. The Key Secret never
+     leaves that function. -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>window.RZP_KEY = "";  // <- paste the Razorpay Key ID here</script>
 <script src="js/side-nav.js?v=3"></script>
 <script src="js/dashboard.js?v=3"></script>
 </body>
