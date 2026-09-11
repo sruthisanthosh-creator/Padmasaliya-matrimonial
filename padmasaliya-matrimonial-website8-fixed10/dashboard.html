@@ -51,6 +51,8 @@
 <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
 <symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="2" y="13" width="5" height="7" rx="2"/><rect x="17" y="13" width="5" height="7" rx="2"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
 <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V8z"/><path d="M13 6v12" stroke-dasharray="2 3"/></symbol>
@@ -118,7 +120,7 @@
       <div class="s3-nav-item" data-view="received"><svg class="icon"><use href="#i-heart"></use></svg> <span data-i18n="s3.nav.received">Received Interests</span><span class="count" id="cntReceived" hidden>0</span></div>
       <div class="s3-nav-item" data-view="sent"><svg class="icon"><use href="#i-send"></use></svg> <span data-i18n="s3.nav.sent">Sent Interests</span><span class="count" id="cntSent" hidden>0</span></div>
       <div class="s3-nav-item" data-view="myprofile"><svg class="icon icon-lg"><use href="#i-user"></use></svg> <span data-i18n="s3.nav.myProfiles">My Profile</span></div>
-      <div class="s3-nav-item" data-view="subscription"><svg class="icon"><use href="#i-crown"></use></svg> <span data-i18n="s3.nav.subscription">Subscription</span></div>
+      <div class="s3-nav-item" data-view="credits"><svg class="icon"><use href="#i-ticket"></use></svg> <span data-i18n="s3.nav.credits">Credits</span><span class="count credit-count" id="cntCredits" hidden>0</span></div>
       <div class="s3-nav-item" onclick="location.href='help.html'" style="cursor:pointer;"><svg class="icon"><use href="#i-headset"></use></svg> <span data-i18n="s3.nav.support">Help &amp; Support</span></div>
       <div class="s3-nav-item" data-view="settings"><svg class="icon"><use href="#i-gear"></use></svg> <span data-i18n="s3.nav.settings">Settings</span></div>
       <div class="s3-nav-item" style="cursor:pointer;" onclick="supabaseClient.auth.signOut().then(()=>window.location.href='home.html');"><svg class="icon"><use href="#i-logout"></use></svg> <span data-i18n="s3.nav.logout">Logout</span></div>
@@ -188,7 +190,7 @@
 
       <div class="free-note" id="freeNote" hidden>
         <svg class="icon"><use href="#i-lock"></use></svg>
-        <span data-i18n="s3.freeNote">You are on the free plan — photo, name, gotram, place and age are shown. Profession, income, education and contact open with Premium, or the moment a family accepts your interest.</span>
+        <span data-i18n="s3.freeNote">Photo, name, age, gotram, rasi, nakshatra, occupation, income and place are free for everyone. One credit opens one family’s contact number and full details — permanently.</span>
         <button type="button" class="link-btn" data-view-go="subscription" data-i18n="s3.seePlans">See plans</button>
       </div>
 
@@ -218,13 +220,14 @@
         <p style="font-size:13px;color:var(--ink-soft);margin:6px 0 0;">Loading…</p>
       </div>
 
-      <div class="panel premium-panel reveal d1">
-        <div class="panel-head"><h3><svg class="icon"><use href="#i-crown"></use></svg> <span data-i18n="s3.premiumBoost">Premium Boost</span></h3><a data-i18n="s3.viewPlans">View Plans</a></div>
-        <p style="font-size:12.5px;color:var(--ink-soft);margin:-6px 0 8px;" data-i18n="s3.premiumDesc">Increase visibility and find the perfect match faster!</p>
-        <div class="plan-row"><div class="left"><span class="ic"><svg class="icon"><use href="#i-ticket"></use></svg></span> <b data-i18n="s3.expressBoost">Express Boost</b></div>₹999</div>
-        <div class="plan-row"><div class="left"><span class="ic"><svg class="icon"><use href="#i-family"></use></svg></span> <b data-i18n="s3.goldPackage">Gold Family Package</b></div>₹2,499</div>
-        <div class="plan-row"><div class="left"><span class="ic"><svg class="icon"><use href="#i-crown"></use></svg></span> <b data-i18n="s3.vipMatch">VIP Matchmaker</b></div>₹4,999</div>
-        <button class="btn-upgrade" id="upgradeBtn" data-i18n="s3.upgradeNow">Upgrade Now</button>
+      <div class="panel premium-panel reveal d1" id="creditPanel">
+        <div class="panel-head"><h3><svg class="icon"><use href="#i-ticket"></use></svg>
+          <span data-i18n="s3.yourCredits">Your Credits</span></h3>
+          <a data-view-go="credits" style="cursor:pointer;" data-i18n="s3.seePlans">See plans</a></div>
+        <div class="credit-balance side"><b id="creditBalance">0</b><span data-i18n="s3.creditsLeft">credits left</span></div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;line-height:1.5;"
+           data-i18n="s3.creditNote">One credit opens one family's contact number and full details, permanently.</p>
+        <button class="btn-upgrade" data-view-go="credits" data-i18n="s3.getCredits">Get credits</button>
         <div class="redeem-box">
           <label data-i18n="s3.haveCode">Already paid? Enter your activation code</label>
           <div class="redeem-row">
@@ -233,6 +236,7 @@
           </div>
           <p class="premium-state" id="premiumState" hidden></p>
         </div>
+      </div>
       </div>
 
       <div class="panel waitlist-panel reveal d2">
@@ -262,6 +266,11 @@
 
 <div class="toast" id="toast"></div>
 <script src="js/main.js?v=3"></script>
+<!-- Razorpay checkout. RZP_KEY is the publishable Key ID and is safe in the
+     page; the Key Secret lives only in the Edge Function. Until the client
+     pastes their key below, the Buy buttons say so instead of failing. -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>window.RZP_KEY = "";  // <- paste the Razorpay Key ID here</script>
 <script src="js/side-nav.js?v=3"></script>
 <script src="js/dashboard.js?v=3"></script>
 </body>

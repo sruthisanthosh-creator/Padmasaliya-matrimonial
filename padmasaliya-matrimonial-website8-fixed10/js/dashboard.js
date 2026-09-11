@@ -54,6 +54,7 @@
   // ---------- state ----------
   let me = null;
   let status = null;          // whatever my_status() last returned
+  let credits = { balance: 0, unlockable: 0, packs: [], unlimited: false };
   let view = 'search';
   let offset = 0;
   let total = 0;
@@ -102,6 +103,8 @@
     if (m.includes('ALREADY_REDEEMED'))return t('You have already used this code.', 'நீங்கள் ஏற்கனவே பயன்படுத்திவிட்டீர்கள்.', 'మీరు ఇప్పటికే ఉపయోగించారు.');
     if (m.includes('BAD_CONTACT'))    return t('Enter a valid 10-digit mobile number.', 'சரியான 10 இலக்க எண்.', 'సరైన 10 అంకెల నంబర్.');
     if (m.includes('REASON_REQUIRED'))return t('Please choose a reason.', 'ஒரு காரணத்தைத் தேர்ந்தெடுக்கவும்.', 'కారణం ఎంచుకోండి.');
+    if (m.includes('NO_CREDITS'))     return t('You have no credits left.', '\u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.', '\u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d\u0c38\u0c4d \u0c32\u0c47\u0c35\u0c41.');
+    if (m.includes('OWN_PROFILE'))    return t('That is your own profile.', '\u0b87\u0ba4\u0bc1 \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b9a\u0bc1\u0baf\u0bb5\u0bbf\u0bb5\u0bb0\u0bae\u0bcd.', '\u0c07\u0c26\u0c3f \u0c2e\u0c40 \u0c38\u0c4d\u0c35\u0c02\u0c24 \u0c2a\u0c4d\u0c30\u0c4a\u0c2b\u0c48\u0c32\u0c4d.');
     if (m.includes('NOT_FOUND'))      return t('That profile is no longer available.', 'சுயவிவரம் இல்லை.', 'ప్రొఫైల్ అందుబాటులో లేదు.');
     if (m.includes('AUTH_REQUIRED'))  return t('Please sign in again.', 'மீண்டும் உள்நுழையவும்.', 'మళ్లీ సైన్ ఇన్ చేయండి.');
     return m || t('Something went wrong.', 'ஏதோ தவறு.', 'ఏదో తప్పు జరిగింది.');
@@ -168,21 +171,23 @@
 
     // The photo is free now, so the badge only marks the fields that are
     // still behind Premium (profession, income, contact).
-    const lockTag = locked
-      ? '<span class="tag-locked">' + icon('lock') + ' ' +
-        t('Premium', 'பிரீமியம்', 'ప్రీమియం') + '</span>'
+    const lockTag = p.unlocked
+      ? '<span class="tag-unlocked">' + icon('check') + ' ' +
+        t('Unlocked', 'திறந்தது', 'తెరిచింది') + '</span>'
       : '';
 
-    // Free plan: the fields simply are not in the payload, so we draw the
-    // shape of the information instead of the information.
-    const detail = locked
-      ? '<div class="locked-line">' + icon('lock') + '<b>&nbsp;Software Engineer&nbsp;</b></div>' +
-        '<div class="locked-line">' + icon('lock') + '<b>&nbsp;₹ 00 LPA&nbsp;</b></div>'
-      : (p.profession ? '<div class="meta">' + esc(p.profession) + '</div>' : '') +
-        (p.work_location ? '<div class="meta">' + esc(p.work_location) + '</div>' : '') +
-        (p.annual_income ? '<div class="income">' + esc(p.annual_income) + '</div>' : '');
+    // Occupation and income are free now. What a credit buys is the contact
+    // number and the finer details, so that is the only shape we draw.
+    const detail =
+      (p.profession ? '<div class="meta">' + esc(p.profession) + '</div>' : '') +
+      (p.annual_income ? '<div class="income">' + esc(p.annual_income) + '</div>' : '') +
+      (locked
+        ? '<div class="locked-line">' + icon('lock') +
+          '<b>&nbsp;+91 00000 00000&nbsp;</b></div>'
+        : (p.work_location ? '<div class="meta">' + esc(p.work_location) + '</div>' : '') +
+          (p.contact_phone ? '<div class="meta"><b>' + esc(p.contact_phone) + '</b></div>' : ''));
 
-    const tags = locked ? '' : [p.nakshatra, p.rasi,
+    const tags = [p.nakshatra, p.rasi,
       p.horoscope_gunas ? p.horoscope_gunas + ' ' + t('Gunas', 'குணங்கள்', 'గుణాలు') : null]
       .filter(Boolean).map((x) => '<span>' + esc(x) + '</span>').join('');
 
@@ -211,6 +216,7 @@
           (tags ? '<div class="profile-tags">' + tags + '</div>' : '') +
           (opts.note ? '<div class="meta" style="margin-top:6px;font-style:italic;">' + esc(opts.note) + '</div>' : '') +
           '<div class="profile-actions">' + (opts.actions || defaultActions(p)) + '</div>' +
+          (opts.hideUnlock ? '' : unlockRow(p)) +
         '</div>' +
       '</div>';
   }
@@ -239,6 +245,26 @@
       icon('send') + ' ' + (p.recommended
         ? t('Recommended', 'பரிந்துரைத்தது', 'సిఫార్సు చేసారు')
         : t('Recommend to Child', 'பிள்ளைக்கு பரிந்துரை', 'పిల్లలకు సిఫార్సు')) + '</button>';
+  }
+
+  // One credit opens one family's contact details, for good. The button
+  // states the price every time rather than spending silently — this is
+  // real money and the member should never be surprised by a deduction.
+  function unlockRow(p) {
+    if (p.is_mine) return '';
+    if (p.unlocked || !p.locked) {
+      return '<div class="unlock-row is-open">' + icon('check') + ' ' +
+        esc(t('Full details open', 'முழு விவரம் திறந்தது', 'పూర్తి వివరాలు తెరిచి')) + '</div>';
+    }
+    const canAfford = credits.balance > 0;
+    return '<button type="button" class="unlock-row" data-act="unlock"' +
+      (canAfford ? '' : ' data-nocredit="1"') + '>' + icon('unlock') + ' ' +
+      esc(canAfford
+        ? t('Unlock contact — 1 credit', 'தொடர்பு திற — 1 கிரெடிட்',
+            'సంప్రదింపు తెరవండి — 1 క్రెడిట్')
+        : t('Get credits to unlock', 'திறக்க கிரெடிட் வாங்க',
+            'తెరవడానికి క్రెడిట్స్ కొనండి')) +
+      '</button>';
   }
 
   function defaultActions(p) {
@@ -520,10 +546,14 @@
                      'மற்றவர்கள் பார்ப்பது', 'ఇతరులు చూసేది'),
       load: async () => myProfileHtml()
     },
-    subscription: {
-      title: () => t('Subscription', 'சந்தா', 'సభ్యత్వం'),
-      sub:   () => t('Your plan, and what it opens up', 'உங்கள் திட்டம்', 'మీ ప్లాన్'),
-      load: async () => subscriptionHtml()
+    credits: {
+      title: () => t('Credits', 'கிரெடிட்கள்', 'క్రెడిట్స్'),
+      sub:   () => t('One credit opens one family, for good',
+                     'ஒரு கிரெடிட் = ஒரு குடும்பம்',
+                     'ఒక క్రెడిట్ = ఒక కుటుంబం'),
+      // fetches first: the balance and the profile count both move while the
+      // member is on the page, and a stale zero here reads as a broken site
+      load: async () => { await refreshCredits(); return creditsHtml(); }
     },
     settings: {
       title: () => t('Settings', 'அமைப்புகள்', 'సెట్టింగ్‌లు'),
@@ -582,38 +612,76 @@
       '</div></div>';
   }
 
-  function subscriptionHtml() {
-    const prem = status && status.premium;
-    const plans = [
-      ['Express Boost', '₹999', t('3 months of full profiles', '3 மாதம்', '3 నెలలు')],
-      ['Gold Family Package', '₹2,499', t('12 months, the usual choice', '12 மாதம்', '12 నెలలు')],
-      ['VIP Matchmaker', '₹4,999', t('12 months + a matchmaker calls you', 'திருமண தரகர் உதவி', 'మ్యాచ్‌మేకర్ సహాయం')]
-    ];
-    return '<div class="self-card">' +
-      '<h3>' + icon('crown') + ' ' +
-        esc(prem ? t('Premium is active', 'பிரீமியம் இயக்கத்தில்', 'ప్రీమియం యాక్టివ్')
-                 : t('You are on the free plan', 'இலவச திட்டம்', 'ఉచిత ప్లాన్')) + '</h3>' +
-      '<p>' + esc(prem
-        ? t('Profession, income, education and contact numbers are open to you on every profile.',
-            'எல்லா சுயவிவரங்களிலும் முழு விவரம் திறந்துள்ளது.',
-            'అన్ని ప్రొఫైల్‌లలో పూర్తి వివరాలు తెరిచి ఉన్నాయి.')
-        : t('You can see every family’s photo, name, gotram, place and age. Profession, income, education and contact open with Premium — or free of charge the moment a family accepts your interest.',
-            'படம், பெயர், கோத்திரம், ஊர், வயது பார்க்கலாம். மீதி பிரீமியத்தில்.',
-            'ఫోటో, పేరు, గోత్రం, ఊరు, వయస్సు చూడవచ్చు. మిగతావి ప్రీమియంలో.')) + '</p>' +
-      (prem ? '' : plans.map((pl) =>
-        '<div class="plan-row"><div class="left"><span class="ic">' + icon('ticket') + '</span> <b>' +
-        esc(pl[0]) + '</b> <span style="font-size:11.5px;color:var(--ink-soft);">' + esc(pl[2]) +
-        '</span></div>' + pl[1] + '</div>').join('')) +
-      '<div class="self-actions" style="margin-top:16px;">' +
-        '<a class="primary" href="premium-plans.html">' + icon('crown') + ' ' +
-          esc(t('See full plans', 'திட்டங்களைப் பார்', 'ప్లాన్‌లు చూడు')) + '</a>' +
-        '<a href="help.html">' + icon('headset') + ' ' +
-          esc(t('Talk to the committee', 'குழுவைத் தொடர்பு கொள்ள', 'కమిటీని సంప్రదించండి')) + '</a>' +
+  function creditsHtml() {
+    const bal   = credits.balance || 0;
+    const can   = credits.unlockable || 0;
+    const packs = credits.packs || [];
+
+    // Only offer a pack the member can actually use up. Selling 50 credits
+    // into a community of twelve families is how you earn a refund request.
+    const buyable = packs.filter((k) => k.affordable);
+    const tooBig  = packs.filter((k) => !k.affordable);
+
+    const packCard = (k) => {
+      const full = k.credits * 100;                 // Rs 100 a credit, undiscounted
+      const off  = full > k.price ? Math.round((1 - k.price / full) * 100) : 0;
+      return '<div class="credit-pack">' +
+        (off ? '<span class="credit-off">' + off + '% OFF</span>' : '') +
+        '<b>' + k.credits + '</b>' +
+        '<span class="credit-unit">' + esc(t('credits', 'கிரெடிட்', 'క్రెడిట్స్')) + '</span>' +
+        '<div class="credit-price">\u20b9' + Number(k.price).toLocaleString('en-IN') + '</div>' +
+        '<div class="credit-per">\u20b9' + k.per_credit + ' ' +
+          esc(t('per profile', 'ஒரு சுயவிவரம்', 'ఒక ప్రొఫైల్')) + '</div>' +
+        '<button class="btn-primary" data-buy="' + esc(k.id) + '">' +
+          esc(t('Buy', 'வாங்க', 'కొనుగోలు')) + '</button>' +
+      '</div>';
+    };
+
+    return '<div class="self-card credit-balance-card">' +
+        '<div class="credit-balance"><b>' + bal + '</b><span>' +
+          esc(bal === 1 ? t('credit left', 'கிரெடிட் மீதம்', 'క్రెడిట్ మిగిలింది')
+                        : t('credits left', 'கிரெடிட் மீதம்', 'క్రెడిట్స్ మిగిలినాయి')) + '</span></div>' +
+        '<p>' + esc(t(
+          'Photo, name, age, gotram, rasi, nakshatra, occupation, income and place are free for ' +
+          'everyone. One credit opens one family\u2019s contact number and full details \u2014 and it ' +
+          'stays open for you, permanently.', 'படம், பெயர், வயது, கோத்திரம், ராசி, நட்சத்திரம், தொழில், வருமானம், ஊர் — இவை அனைவர்க்கும் இலவசம். தொடர்பு எண்ணும் முழு விவரமும் திறக்க 1 கிரெடிட் — ஒரு முறை திறந்தால் நிரந்தரம்.', 'ఫోటో, పేరు, వయస్సు, గోత్రం, రాశి, నక్షత్రం, వృత్తి, ఆదాయం, ఊరు — ఇవి అందరికీ ఉచితం. సంప్రదింపు నంబర్ మరియు పూర్తి వివరాలకు 1 క్రెడిట్ — ఒకసారి తెరిచితే శాశ్వతం.')) + '</p>' +
+        (credits.unlocked ? '<p class="credit-sofar">' +
+          esc(t('You have opened ' + credits.unlocked + ' profile' +
+                (credits.unlocked === 1 ? '' : 's') + ' so far.', 'இதுவரை திறந்தவை.', 'ఇప్పటివరకు తెరిచినవి.')) + '</p>' : '') +
       '</div>' +
-      '<p style="margin-top:16px;font-size:12.5px;">' +
-        esc(t('Paid by UPI or in person? Enter the activation code you were given in the Premium box on the right.',
-              'UPI மூலம் செலுத்தியிருந்தால், வலதுபுறம் குறியீட்டை உள்ளிடவும்.',
-              'UPI ద్వారా చెల్లించారా? కుడివైపు కోడ్ నమోదు చేయండి.')) + '</p>' +
+
+      (credits.unlimited
+        ? '<div class="self-card"><h3>' + icon('crown') + ' ' +
+            esc(t('Committee account', 'குழு கணக்கு', 'కమిటీ ఖాతా')) + '</h3><p>' +
+            esc(t('This account sees every profile in full without spending credits.',
+                  'இந்த கணக்கிற்கு எல்லா விவரமும் கிரெடிட் இன்றி தெரியும்.', 'ఈ ఖాతాకు క్రెడిట్స్ లేకుండా అన్నీ కనపడతాయి.')) + '</p></div>'
+        : can < 5
+          ? '<div class="self-card"><h3>' +
+              esc(t('Not enough families yet', 'இன்னும் குடும்பங்கள் குறைவு', 'ఇంకా కుటుంబాలు తక్కువ')) + '</h3><p>' +
+              esc(t('There ' + (can === 1 ? 'is ' : 'are ') + can + ' profile' +
+                    (can === 1 ? '' : 's') + ' you could open right now, and the smallest pack is ' +
+                    '5 credits. We are not going to sell you credits with nothing to spend them on ' +
+                    '\u2014 look again in a few days, as more families join.', 'இப்போது திறக்கக்கூடிய குடும்பங்கள் குறைவு. சிறிய பேக் 5 கிரெடிட். பயன்படுத்த முடியாத கிரெடிட்டை நாங்கள் விற்க மாட்டோம்.', 'ఇప్పుడు తెరవడానికి తక్కువ కుటుంబాలే ఉన్నాయి. చిన్న ప్యాక్ 5 క్రెడిట్స్. ఉపయోగించలేని క్రెడిట్స్ మేము అమ్మం.')) +
+            '</p></div>'
+          : '<div class="self-card"><h3>' +
+              esc(t('Buy credits', 'கிரெடிட் வாங்க', 'క్రెడిట్స్ కొనండి')) + '</h3><p>' +
+              esc(t('You have ' + can + ' famil' + (can === 1 ? 'y' : 'ies') + ' left to open.',
+                    'திறக்கக்கூடிய குடும்பங்கள் மீதம் உள்ளன.', 'తెరవడానికి కుటుంబాలు మిగిలి ఉన్నాయి.')) + '</p>' +
+              '<div class="credit-packs">' + buyable.map(packCard).join('') + '</div>' +
+              (tooBig.length ? '<p class="credit-sofar">' +
+                esc(t('The ' + tooBig.map((k) => k.credits).join(' and ') +
+                      ' credit packs open up as more families join.', 'பெரிய பேக்குகள் கூடுதல் குடும்பங்கள் சேரும்போது திறக்கும்.', 'పెద్ద ప్యాక్లు మరిన్ని కుటుంబాలు చేరినప్పుడు తెరుస్తాయి.')) + '</p>' : '') +
+            '</div>') +
+
+      '<div class="self-card"><h3>' +
+        esc(t('Paid by UPI or in person?', 'UPI மூலம் செலுத்தியிருந்தால்?', 'UPI ద్వారా చెల్లించారా?')) + '</h3><p>' +
+        esc(t('Enter the activation code the committee gave you and the credits are added straight away.',
+              'குழு தந்த குறியீட்டை உள்ளிட்டால் கிரெடிட் உடனே சேரும்.', 'కమిటీ ఇచ్చిన కోడ్ నమోదు చేస్తే క్రెడిట్స్ వెంటనే చేరుతాయి.')) + '</p>' +
+        '<div class="redeem-row" style="max-width:360px;">' +
+          '<input type="text" id="creditCode" placeholder="PADMA-XXXXXX" autocomplete="off" spellcheck="false">' +
+          '<button type="button" id="creditCodeBtn">' +
+            esc(t('Activate', 'செயல்படுத்து', 'యాక్టివేట్')) + '</button>' +
+        '</div>' +
       '</div>';
   }
 
@@ -650,6 +718,79 @@
       '</div></div>';
   }
 
+  function wireCreditsView() {
+    listGrid.querySelectorAll('[data-buy]').forEach((b) => {
+      b.addEventListener('click', () => startCheckout(b.dataset.buy, b));
+    });
+    const codeBtn = document.getElementById('creditCodeBtn');
+    if (codeBtn) codeBtn.addEventListener('click', () => redeemCode('creditCode', codeBtn));
+  }
+
+  // Razorpay is not wired up yet, so say so plainly rather than opening a
+  // checkout that cannot take money. The committee can still hand out codes.
+  async function startCheckout(packId, btn) {
+    const pack = (credits.packs || []).find((k) => k.id === packId);
+    if (!pack) return;
+    if (typeof window.Razorpay === 'undefined' || !window.RZP_KEY) {
+      showToast(t('Card and UPI payment is being set up. For now, ask the committee for an activation code.',
+        'UPI/\u0b95\u0bbe\u0bb0\u0bcd\u0b9f\u0bcd \u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd \u0bb5\u0bb0\u0bc1\u0b95\u0bbf\u0bb1\u0ba4\u0bc1. \u0b87\u0baa\u0bcd\u0baa\u0bcb\u0ba4\u0bc9\u0b95\u0bcd\u0b95\u0bc1 \u0b95\u0bc1\u0bb4\u0bc1\u0bb5\u0bbf\u0b9f\u0bae\u0bcd \u0b95\u0bc1\u0bb1\u0bbf\u0baf\u0bc0\u0b9f\u0bcd\u0b9f\u0bc1 \u0b95\u0bc7\u0bb3\u0bc1\u0b99\u0bcd\u0b95\u0bb3\u0bcd.',
+        '\u0c15\u0c3e\u0c30\u0c4d\u0c21\u0c41/UPI \u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c2a\u0c41 \u0c38\u0c3f\u0c26\u0c4d\u0c27\u0c02 \u0c05\u0c35\u0c41\u0c24\u0c4b\u0c02\u0c26\u0c3f. \u0c07\u0c2a\u0c4d\u0c2a\u0c1f\u0c3f\u0c15\u0c3f \u0c15\u0c2e\u0c3f\u0c1f\u0c40\u0c28\u0c3f \u0c15\u0c4b\u0c21\u0c4d \u0c05\u0c21\u0c17\u0c02\u0c21\u0c3f.'));
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const { data: order, error: oErr } = await supabaseClient.functions
+        .invoke('razorpay', { body: { action: 'create-order', pack_id: packId } });
+      if (oErr || !order || !order.razorpay_order_id) throw (oErr || new Error('ORDER_FAILED'));
+      const rz = new window.Razorpay({
+        key: window.RZP_KEY,
+        order_id: order.razorpay_order_id,
+        amount: pack.price_paise,
+        currency: 'INR',
+        name: 'Padmasaliya Matrimonial',
+        description: pack.credits + ' credits',
+        prefill: { email: (me && me.email) || '' },
+        theme: { color: '#7a1a2b' },
+        handler: async (r) => {
+          try {
+            const { error: vErr } = await supabaseClient.functions.invoke('razorpay', {
+              body: { action: 'verify',
+                      razorpay_order_id: r.razorpay_order_id,
+                      razorpay_payment_id: r.razorpay_payment_id,
+                      razorpay_signature: r.razorpay_signature }
+            });
+            if (vErr) throw vErr;
+            showToast(t(pack.credits + ' credits added.',
+              pack.credits + ' \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b9a\u0bc7\u0bb0\u0bcd\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1.',
+              pack.credits + ' \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d\u0c38\u0c4d \u0c1a\u0c47\u0c30\u0c3e\u0c2f\u0c3f.'));
+            await refreshCredits();
+            go('credits');
+          } catch (e) { showToast(explain(e)); }
+        },
+        modal: { ondismiss: () => { btn.disabled = false; } }
+      });
+      rz.open();
+    } catch (e) { showToast(explain(e)); btn.disabled = false; }
+  }
+
+  async function redeemCode(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const code = (input.value || '').trim();
+    if (!code) return;
+    btn.disabled = true;
+    try {
+      const r = await rpc('redeem_premium_code', { p_code: code });
+      input.value = '';
+      showToast(t((r.credits || 0) + ' credits added.',
+        (r.credits || 0) + ' \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b9a\u0bc7\u0bb0\u0bcd\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1.',
+        (r.credits || 0) + ' \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d\u0c38\u0c4d \u0c1a\u0c47\u0c30\u0c3e\u0c2f\u0c3f.'));
+      await refreshCredits();
+      if (view === 'credits') go('credits');
+      else if (view === 'search') runSearch(true);
+    } catch (e) { showToast(explain(e)); }
+    btn.disabled = false;
+  }
+
   // ---------- view switching ----------
   async function go(name) {
     if (!VIEWS[name]) name = 'search';
@@ -683,6 +824,7 @@
       esc(t('Loading…', 'ஏற்றுகிறது…', 'లోడ్…')) + '</div>';
     try {
       listGrid.innerHTML = await VIEWS[name].load();
+      if (name === 'credits') wireCreditsView();
     } catch (e) {
       listGrid.innerHTML = emptyState('help',
         t('Could not load this', 'ஏற்ற முடியவில்லை', 'లోడ్ కాలేదు'), explain(e));
@@ -724,6 +866,59 @@
     return true;
   }
 
+  // Spending is a one-way door, so it asks first and says exactly what it
+  // costs and what it buys. A refusal from the database (no credits left,
+  // someone else's profile) surfaces as plain language, not an error code.
+  async function doUnlock(id, btn) {
+    if (!id) return;
+    if (btn && btn.dataset.nocredit) { go('credits'); return; }
+
+    const ok = window.confirm(t(
+      'Use 1 credit to open this family\u2019s contact number and full details?' + '\n\n' +
+      'It stays open for you from now on \u2014 you never pay for this profile again.' + '\n' +
+      'Credits left after this: ' + Math.max(0, credits.balance - 1),
+      '1 \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b9a\u0bc6\u0bb2\u0bb5\u0bbf\u0b9f\u0bcd\u0b9f\u0bc1 \u0b87\u0ba8\u0bcd\u0ba4 \u0b95\u0bc1\u0b9f\u0bc1\u0bae\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0ba9\u0bcd \u0bae\u0bc1\u0bb4\u0bc1 \u0bb5\u0bbf\u0bb5\u0bb0\u0bae\u0bcd \u0ba4\u0bbf\u0bb1\u0b95\u0bcd\u0b95\u0bb5\u0bbe?',
+      '1 \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d \u0c16\u0c30\u0c4d\u0c1a\u0c41 \u0c1a\u0c47\u0c38\u0c3f \u0c08 \u0c15\u0c41\u0c1f\u0c41\u0c02\u0c2c \u0c2a\u0c42\u0c30\u0c4d\u0c24\u0c3f \u0c35\u0c3f\u0c35\u0c30\u0c3e\u0c32\u0c41 \u0c24\u0c46\u0c30\u0c35\u0c3e\u0c32\u0c3e?'));
+    if (!ok) return;
+
+    if (btn) btn.disabled = true;
+    try {
+      const res = await rpc('unlock_profile', { p_id: id });
+      if (typeof res.balance === 'number') credits.balance = res.balance;
+      showToast(res.already
+        ? t('Already open for you.', 'ஏற்கனே திறந்தது.', 'ఇప్పటికే తెరిచి ఉంది.')
+        : t('Unlocked. ' + credits.balance + ' credits left.',
+            'திறந்தது. மீதம் ' + credits.balance,
+            'తెరిచింది. మిగిలినవి ' + credits.balance));
+      await refreshCredits();
+      if (!modal.hidden && openId === id) openProfile(id);
+      else if (view === 'search') runSearch(true);
+      else go(view);
+    } catch (err) {
+      if (String(err.message || '').includes('NO_CREDITS')) {
+        showToast(t('No credits left.', 'கிரெடிட் இல்லை.', 'క్రెడిట్స్ లేవు.'));
+        go('credits');
+      } else showToast(explain(err));
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function renderCreditChip() {
+    const n = credits.balance || 0;
+    const el = document.getElementById('cntCredits');
+    if (el) { el.textContent = n; el.hidden = !n && !credits.unlimited; }
+    const side = document.getElementById('creditBalance');
+    if (side) side.textContent = credits.unlimited ? '\u221e' : n;
+  }
+
+  async function refreshCredits() {
+    try {
+      const c = await rpc('my_credit_state');
+      if (c && c.signed_in) credits = c;
+    } catch (e) { /* the page still works without the balance */ }
+    renderCreditChip();
+  }
+
   async function onCardClick(e) {
     const btn = e.target.closest('[data-act]');
     if (!btn) return;
@@ -734,6 +929,7 @@
 
     if (act === 'open' && id) { openProfile(id); return; }
     if (act === 'recommend-soon') { showToast(soonMsg()); return; }
+    if (act === 'unlock') { doUnlock(id, btn); return; }
     if (!id && !btn.dataset.iid) return;
 
     btn.disabled = true;
@@ -883,15 +1079,20 @@
 
     const upsell = locked
       ? '<div class="pm-upsell"><b>' + icon('lock') + ' ' +
-          esc(t('Locked on the free plan', 'இலவசத் திட்டத்தில் பூட்டப்பட்டது', 'ఉచిత ప్లాన్‌లో లాక్')) + '</b>' +
-          esc(t('Profession, income, education and contact number open with Premium — or free of charge the moment this family accepts your interest.',
-                'தொழில், வருமானம், கல்வி, தொடர்பு எண் ஆகியவை பிரீமியத்தில் அல்லது இவர்கள் உங்கள் ஆர்வத்தை ஏற்றால் திறக்கும்.',
-                'వృత్తి, ఆదాయం, విద్య, సంప్రదింపు నంబర్ ప్రీమియంలో లేదా వారు మీ ఆసక్తిని అంగీకరిస్తే తెరుచుకుంటాయి.')) +
+          esc(t('Contact and full details are closed',
+                '\u0ba4\u0bca\u0b9f\u0bb0\u0bcd\u0baa\u0bc1 \u0bae\u0bc2\u0b9f\u0bbf\u0baf\u0bc1\u0bb3\u0bcd\u0bb3\u0ba4\u0bc1',
+                '\u0c38\u0c02\u0c2a\u0c4d\u0c30\u0c26\u0c3f\u0c02\u0c2a\u0c41 \u0c2e\u0c42\u0c38\u0c3f \u0c09\u0c02\u0c26\u0c3f')) + '</b>' +
+          esc(t('One credit opens this family\u2019s contact number, jathagam, education and the rest — ' +
+                'and keeps it open for you from then on.',
+                '1 \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd \u0b87\u0ba8\u0bcd\u0ba4 \u0b95\u0bc1\u0b9f\u0bc1\u0bae\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0ba9\u0bcd \u0bae\u0bc1\u0bb4\u0bc1 \u0bb5\u0bbf\u0bb5\u0bb0\u0bae\u0bc8\u0baf\u0bc1\u0bae\u0bcd \u0ba8\u0bbf\u0bb0\u0ba8\u0bcd\u0ba4\u0bb0\u0bae\u0bbe\u0b95\u0ba4\u0bcd \u0ba4\u0bbf\u0bb1\u0b95\u0bcd\u0b95\u0bc1\u0bae\u0bcd.',
+                '1 \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d \u0c08 \u0c15\u0c41\u0c1f\u0c41\u0c02\u0c2c \u0c2a\u0c42\u0c30\u0c4d\u0c24\u0c3f \u0c35\u0c3f\u0c35\u0c30\u0c3e\u0c32\u0c28\u0c41 \u0c36\u0c3e\u0c36\u0c4d\u0c35\u0c24\u0c02\u0c17\u0c3e \u0c24\u0c46\u0c30\u0c41\u0c38\u0c4d\u0c24\u0c41\u0c02\u0c26\u0c3f.')) +
         '</div>'
-      : (p.unlocked_by_accept
-          ? '<div class="pm-upsell"><b>' + icon('heart-fill') + ' ' +
-            esc(t('Opened because they accepted your interest', 'ஆர்வம் ஏற்கப்பட்டதால் திறந்தது', 'ఆసక్తి అంగీకరించడంతో తెరిచింది')) +
-            '</b>' + esc(t('You can contact this family directly.', 'நேரடியாக தொடர்பு கொள்ளலாம்.', 'నేరుగా సంప్రదించవచ్చు.')) + '</div>'
+      : (p.unlocked
+          ? '<div class="pm-upsell open"><b>' + icon('check') + ' ' +
+            esc(t('Open to you', '\u0ba4\u0bbf\u0bb1\u0ba8\u0bcd\u0ba4\u0ba4\u0bc1', '\u0c24\u0c46\u0c30\u0c3f\u0c1a\u0c3f\u0c02\u0c26\u0c3f')) + '</b>' +
+            esc(t('You spent a credit on this family. It stays open — no second charge.',
+                  '\u0b87\u0ba8\u0bcd\u0ba4 \u0b95\u0bc1\u0b9f\u0bc1\u0bae\u0bcd\u0baa\u0ba4\u0bcd\u0ba4\u0bbf\u0bb1\u0bcd\u0b95\u0bc1 \u0bae\u0bc0\u0ba3\u0bcd\u0b9f\u0bc1\u0bae\u0bcd \u0b95\u0b9f\u0bcd\u0b9f\u0ba3\u0bae\u0bcd \u0b87\u0bb2\u0bcd\u0bb2\u0bc8.',
+                  '\u0c08 \u0c15\u0c41\u0c1f\u0c41\u0c02\u0c2c\u0c3e\u0c28\u0c3f\u0c15\u0c3f \u0c2e\u0c33\u0c4d\u0c32\u0c40 \u0c1a\u0c46\u0c32\u0c4d\u0c32\u0c3f\u0c02\u0c1a\u0c28\u0c15\u0c4d\u0c15\u0c30\u0c32\u0c47\u0c26\u0c41.')) + '</div>'
           : '');
 
     const sentPill = p.interest
@@ -941,6 +1142,11 @@
             icon('heart') + ' ' + esc(p.interest
               ? t('Interest sent', 'அனுப்பியது', 'పంపారు')
               : t('Send interest', 'ஆர்வம் அனுப்பு', 'ఆసక్తి పంపు')) + '</button>' +
+          (locked && !p.is_mine
+            ? '<button class="primary" data-pm="unlock">' + icon('unlock') + ' ' +
+              esc(t('Unlock \u2014 1 credit', '\u0ba4\u0bbf\u0bb1 \u2014 1 \u0b95\u0bbf\u0bb0\u0bc6\u0b9f\u0bbf\u0b9f\u0bcd',
+                    '\u0c24\u0c46\u0c30\u0c35\u0c02\u0c21\u0c3f \u2014 1 \u0c15\u0c4d\u0c30\u0c46\u0c21\u0c3f\u0c1f\u0c4d')) + '</button>'
+            : '') +
           '<button class="danger" data-pm="report" title="' +
             esc(t('Report this profile', 'புகார் அளி', 'ఫిర్యాదు')) + '">' + icon('shield') + '</button>' +
         '</div>' +
@@ -981,6 +1187,7 @@
 
       if (act === 'report') { $('pmReport').hidden = !$('pmReport').hidden; return; }
       if (act === 'recommend-soon') { showToast(soonMsg()); return; }
+      if (act === 'unlock') { doUnlock(openId, btn); return; }
 
       if (act === 'jathagam') {
         btn.disabled = true;
@@ -1122,25 +1329,7 @@
   }
 
   const redeemBtn = $('redeemBtn');
-  if (redeemBtn) {
-    redeemBtn.addEventListener('click', async () => {
-      const input = $('redeemInput');
-      const code = (input.value || '').trim();
-      if (!code) return;
-      redeemBtn.disabled = true;
-      try {
-        await rpc('redeem_premium_code', { p_code: code });
-        input.value = '';
-        showToast(t('Premium activated. Full profiles are open to you now.',
-          'பிரீமியம் இயக்கப்பட்டது.', 'ప్రీమియం యాక్టివ్ అయింది.'));
-        await refreshStatus();
-        renderPremiumBox();
-        photoCache.clear();
-        if (view === 'search') runSearch(true); else go(view);
-      } catch (e) { showToast(explain(e)); }
-      redeemBtn.disabled = false;
-    });
-  }
+  if (redeemBtn) redeemBtn.addEventListener('click', () => redeemCode('redeemInput', redeemBtn));
 
   const upgradeBtn = $('upgradeBtn');
   if (upgradeBtn) upgradeBtn.addEventListener('click', () => { window.location.href = 'premium-plans.html'; });
@@ -1214,6 +1403,11 @@
   // ---------- boot ----------
   async function refreshStatus() {
     status = await rpc('my_status', {});
+    // my_status carries the balance, so the first render of the results
+    // already knows it — otherwise every card says "get credits" for a
+    // moment even when the member has plenty.
+    if (typeof status.credits === 'number') credits.balance = status.credits;
+    if (status.unlimited) credits.unlimited = true;
     setIdentity();
     renderPremiumBox();
     return status;
@@ -1241,6 +1435,7 @@
       F.looking.value = status.profile.created_for === 'son' ? 'bride' : 'groom';
     }
 
+    await refreshCredits();
     const start = (location.hash || '').replace('#', '');
     await go(VIEWS[start] ? start : 'search');
     refreshCounts();
