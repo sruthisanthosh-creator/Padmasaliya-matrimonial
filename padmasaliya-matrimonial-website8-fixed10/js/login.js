@@ -31,6 +31,8 @@ const resendLink = document.getElementById('resendLink');
 const changeNumberBtn = document.getElementById('changeNumberBtn');
 const resendLinkBtn = document.getElementById('resendLinkBtn');
 const changeEmailBtn = document.getElementById('changeEmailBtn');
+const enterCodeInsteadBtn = document.getElementById('enterCodeInsteadBtn');
+const changeNumberDefaultText = changeNumberBtn.textContent;
 
 // Where the magic link should send people back to.
 const RETURN_URL = new URL('login.html', window.location.href).href;
@@ -155,6 +157,7 @@ async function sendLogin() {
     const prefix = (translations[currentLang] && translations[currentLang].login && translations[currentLang].login.otpSubtitlePrefix)
       || 'Enter the 6-digit code sent to';
     otpSentTo.textContent = prefix + ' +91 ' + phoneInput.value.trim();
+    changeNumberBtn.textContent = changeNumberDefaultText;
     stepOtp.classList.add('active');
     otpBoxes.forEach(b => b.value = '');
     otpBoxes[0].focus();
@@ -188,6 +191,24 @@ if (changeEmailBtn) {
   });
 }
 
+// Some inboxes (Gmail, Outlook Safe Links, corporate scanners) open every
+// link in a mail once to check it for safety - that spends the one-time
+// magic link before the member ever taps it themselves. The 6-digit code
+// riding along in the same email is immune to that, so it needs no click:
+// it is typed in, and Supabase checks it the same way it checks an SMS OTP.
+if (enterCodeInsteadBtn) {
+  enterCodeInsteadBtn.addEventListener('click', () => {
+    stepEmailSent.classList.remove('active');
+    otpSentTo.textContent = 'Enter the 6-digit code sent to ' + pendingEmail;
+    changeNumberBtn.textContent = '← Use a different email';
+    stepOtp.classList.add('active');
+    otpBoxes.forEach(b => b.value = '');
+    otpError.style.display = 'none';
+    otpBoxes[0].focus();
+    startResendTimer();
+  });
+}
+
 // ---------------------------------------------------------------
 // Phone step: OTP boxes, resend timer, verify
 // ---------------------------------------------------------------
@@ -211,9 +232,22 @@ function updateResendLabel() {
   const base = currentLang === 'en' ? 'Resend in' : (currentLang === 'ta' ? 'மீண்டும் அனுப்ப' : 'మళ్లీ పంపడానికి');
   resendLink.textContent = base + ' ' + resendSeconds + 's';
 }
-resendLink.addEventListener('click', () => {
+// Resending here must not switch screens - a member who followed "Enter the
+// code instead" is looking at the OTP boxes, and a resend that flipped them
+// back to "check your email" would just send them looking for the link again.
+resendLink.addEventListener('click', async () => {
   if (resendLink.classList.contains('disabled')) return;
-  sendLogin();
+  let error;
+  if (channel === 'phone') {
+    ({ error } = await supabaseClient.auth.signInWithOtp({ phone: pendingPhone }));
+  } else {
+    ({ error } = await supabaseClient.auth.signInWithOtp({
+      email: pendingEmail,
+      options: { shouldCreateUser: true, emailRedirectTo: RETURN_URL }
+    }));
+  }
+  startResendTimer();
+  showToast(error ? (error.message || 'Could not resend.') : 'Code sent again');
 });
 
 otpBoxes.forEach((box, i) => {
@@ -244,9 +278,9 @@ verifyOtpBtn.addEventListener('click', async () => {
   }
 
   verifyOtpBtn.disabled = true;
-  const { data, error } = await supabaseClient.auth.verifyOtp({
-    phone: pendingPhone, token: entered, type: 'sms'
-  });
+  const { data, error } = channel === 'phone'
+    ? await supabaseClient.auth.verifyOtp({ phone: pendingPhone, token: entered, type: 'sms' })
+    : await supabaseClient.auth.verifyOtp({ email: pendingEmail, token: entered, type: 'email' });
   verifyOtpBtn.disabled = false;
 
   if (error || !data || !data.session) {
